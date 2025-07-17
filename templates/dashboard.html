@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - GreenTrack{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-white mb-0">
+            <i class="fas fa-tachometer-alt me-2"></i>Welcome back, {{ user_name }}!
+        </h2>
+    </div>
+</div>
+
+<!-- Carbon Score Display -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="carbon-score">
+            <h2>{{ current_score }} kg CO₂</h2>
+            <p class="mb-0">Your Daily Carbon Footprint</p>
+            <small class="opacity-75">Updated based on your recent activities</small>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card">
+            <i class="fas fa-calendar-check text-success"></i>
+            <h4>{{ logs|length }}</h4>
+            <p class="text-muted mb-0">Days Tracked</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card">
+            <i class="fas fa-seedling text-success"></i>
+            <h4>{{ pledges|length }}</h4>
+            <p class="text-muted mb-0">Pledges Made</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card">
+            <i class="fas fa-leaf text-success"></i>
+            <h4>{{ (current_score * 0.1)|round(1) }}</h4>
+            <p class="text-muted mb-0">Trees Equivalent</p>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card stats-card">
+            <i class="fas fa-trophy text-warning"></i>
+            <h4>{{ logs|length // 7 }}</h4>
+            <p class="text-muted mb-0">Weeks Active</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Charts Section -->
+    <div class="col-lg-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-chart-line me-2"></i>Your Carbon Footprint Trends</h4>
+            </div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="emissionsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Climate Tips -->
+    <div class="col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Climate Tips</h4>
+            </div>
+            <div class="card-body">
+                {% for tip in tips %}
+                <div class="card tip-card mb-3">
+                    <div class="card-body">
+                        <h6 class="card-title">{{ tip.title }}</h6>
+                        <p class="card-text small">{{ tip.content }}</p>
+                        <span class="badge bg-success">{{ tip.category|title }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and Pledges -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h4>
+            </div>
+            <div class="card-body">
+                {% if logs %}
+                    {% for log in logs[:5] %}
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <strong>{{ log.transport_mode|title }}</strong>
+                            {% if log.transport_distance > 0 %}
+                                ({{ log.transport_distance }} km)
+                            {% endif %}
+                            <br>
+                            <small class="text-muted">
+                                {{ log.meal_type|title }} meal • {{ log.energy_usage|title }} energy
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-danger">{{ log.total_emissions }} kg CO₂</span>
+                            <br>
+                            <small class="text-muted">{{ log.created_at.strftime('%b %d') }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">No activities logged yet. 
+                        <a href="{{ url_for('log_activity') }}" class="text-decoration-none">Log your first activity!</a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-seedling me-2"></i>Recent Pledges</h4>
+            </div>
+            <div class="card-body">
+                {% if pledges %}
+                    {% for pledge in pledges[:5] %}
+                    <div class="card pledge-card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ pledge.pledge_type|replace('_', ' ')|title }}</strong>
+                                    <br>
+                                    <small>{{ pledge.created_at.strftime('%b %d, %Y') }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge bg-light text-dark">{{ pledge.amount }} kg CO₂</span>
+                                    <br>
+                                    <small class="opacity-75">{{ pledge.status|title }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center">No pledges yet. 
+                        <a href="{{ url_for('pledge') }}" class="text-decoration-none">Make your first pledge!</a>
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('log_activity') }}" class="btn btn-success w-100">
+                            <i class="fas fa-plus me-2"></i>Log Today's Activity
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ url_for('pledge') }}" class="btn btn-primary w-100">
+                            <i class="fas fa-seedling me-2"></i>Make a Pledge
+                        </a>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <button class="btn btn-outline-success w-100" onclick="shareProgress()">
+                            <i class="fas fa-share me-2"></i>Share Progress
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Chart.js configuration
+const ctx = document.getElementById('emissionsChart').getContext('2d');
+
+const weeklyData = {{ weekly_data|tojson }};
+const labels = weeklyData.map(item => item.week);
+const data = weeklyData.map(item => item.emissions);
+
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [{
+            label: 'Weekly Carbon Emissions (kg CO₂)',
+            data: data,
+            borderColor: '#2ecc71',
+            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0,0,0,0.1)'
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+function shareProgress() {
+    const score = {{ current_score }};
+    const text = `I'm tracking my carbon footprint with GreenTrack! My current daily footprint is ${score} kg CO₂. Join me in making a positive impact on our planet! 🌱`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'My GreenTrack Progress',
+            text: text,
+            url: window.location.origin
+        });
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        alert('Progress copied to clipboard!');
+    }
+}
+
+// Auto-refresh carbon score every 30 seconds
+setInterval(function() {
+    fetch('/api/score')
+        .then(response => response.json())
+        .then(data => {
+            if (data.score) {
+                document.querySelector('.carbon-score h2').textContent = data.score + ' kg CO₂';
+            }
+        })
+        .catch(error => console.log('Error updating score:', error));
+}, 30000);
+</script>
+{% endblock %} 

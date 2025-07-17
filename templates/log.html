@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Log Activity - GreenTrack{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-plus me-2"></i>Log Today's Activity</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" id="logForm">
+                    <!-- Transport Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="fas fa-car me-2"></i>Transport</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="transport_mode" class="form-label">Mode of Transport</label>
+                                <select class="form-select" id="transport_mode" name="transport_mode" required>
+                                    <option value="">Choose transport mode</option>
+                                    <option value="car">Car</option>
+                                    <option value="bus">Bus</option>
+                                    <option value="train">Train</option>
+                                    <option value="walk">Walking</option>
+                                    <option value="bike">Bicycle</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="transport_distance" class="form-label">Distance (km)</label>
+                                <input type="number" class="form-control" id="transport_distance" name="transport_distance" 
+                                       min="0" step="0.1" value="0" required>
+                                <div class="form-text">Enter 0 for walking/biking</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Diet Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="fas fa-utensils me-2"></i>Meals</h5>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="meal_type" class="form-label">Today's Main Meal Type</label>
+                                <select class="form-select" id="meal_type" name="meal_type" required>
+                                    <option value="">Choose meal type</option>
+                                    <option value="veg">Vegetarian</option>
+                                    <option value="non_veg">Non-Vegetarian</option>
+                                    <option value="mixed">Mixed (Some meat, some veg)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Energy Section -->
+                    <div class="mb-4">
+                        <h5 class="mb-3"><i class="fas fa-bolt me-2"></i>Energy Usage</h5>
+                        <div class="row">
+                            <div class="col-12 mb-3">
+                                <label for="energy_usage" class="form-label">Energy Consumption Level</label>
+                                <select class="form-select" id="energy_usage" name="energy_usage" required>
+                                    <option value="">Choose energy level</option>
+                                    <option value="low">Low (Conscious usage)</option>
+                                    <option value="medium">Medium (Average usage)</option>
+                                    <option value="high">High (Heavy usage)</option>
+                                </select>
+                                <div class="form-text">
+                                    Consider factors like AC usage, electronics, and overall energy consumption
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Carbon Impact Preview -->
+                    <div class="mb-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Carbon Impact Preview</h6>
+                            <div id="carbonPreview">
+                                <p class="mb-0">Fill in the form above to see your estimated carbon impact.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-save me-2"></i>Log Activity
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Tips Section -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Tips to Reduce Your Footprint</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-walking text-success mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>Walk or Bike</h6>
+                            <p class="small text-muted">For short trips under 2km, walking or biking can reduce emissions by 100%.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-seedling text-success mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>Choose Plant-Based</h6>
+                            <p class="small text-muted">Vegetarian meals can reduce your carbon footprint by up to 50%.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-leaf text-success mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>Conserve Energy</h6>
+                            <p class="small text-muted">Turn off unused electronics and use energy-efficient appliances.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Carbon footprint calculation factors
+const carbonFactors = {
+    transport: {
+        car: 0.2,    // kg CO2 per km
+        bus: 0.05,
+        train: 0.04,
+        walk: 0,
+        bike: 0
+    },
+    diet: {
+        veg: 0.5,     // kg CO2 per meal
+        non_veg: 2.5,
+        mixed: 1.5
+    },
+    energy: {
+        low: 2,       // kg CO2 per day
+        medium: 5,
+        high: 10
+    }
+};
+
+function calculateCarbonFootprint() {
+    const transportMode = document.getElementById('transport_mode').value;
+    const transportDistance = parseFloat(document.getElementById('transport_distance').value) || 0;
+    const mealType = document.getElementById('meal_type').value;
+    const energyUsage = document.getElementById('energy_usage').value;
+    
+    let totalEmissions = 0;
+    let breakdown = [];
+    
+    // Calculate transport emissions
+    if (transportMode && transportDistance >= 0) {
+        const transportEmissions = carbonFactors.transport[transportMode] * transportDistance;
+        totalEmissions += transportEmissions;
+        if (transportEmissions > 0) {
+            breakdown.push(`${transportEmissions.toFixed(2)} kg from transport`);
+        }
+    }
+    
+    // Calculate meal emissions
+    if (mealType) {
+        const mealEmissions = carbonFactors.diet[mealType];
+        totalEmissions += mealEmissions;
+        breakdown.push(`${mealEmissions.toFixed(2)} kg from meals`);
+    }
+    
+    // Calculate energy emissions
+    if (energyUsage) {
+        const energyEmissions = carbonFactors.energy[energyUsage];
+        totalEmissions += energyEmissions;
+        breakdown.push(`${energyEmissions.toFixed(2)} kg from energy`);
+    }
+    
+    // Update preview
+    const preview = document.getElementById('carbonPreview');
+    if (totalEmissions > 0) {
+        preview.innerHTML = `
+            <strong>Estimated Total: ${totalEmissions.toFixed(2)} kg CO₂</strong><br>
+            <small class="text-muted">${breakdown.join(', ')}</small>
+        `;
+    } else {
+        preview.innerHTML = '<p class="mb-0">Fill in the form above to see your estimated carbon impact.</p>';
+    }
+}
+
+// Add event listeners for real-time calculation
+document.getElementById('transport_mode').addEventListener('change', calculateCarbonFootprint);
+document.getElementById('transport_distance').addEventListener('input', calculateCarbonFootprint);
+document.getElementById('meal_type').addEventListener('change', calculateCarbonFootprint);
+document.getElementById('energy_usage').addEventListener('change', calculateCarbonFootprint);
+
+// Form validation
+document.getElementById('logForm').addEventListener('submit', function(e) {
+    const transportMode = document.getElementById('transport_mode').value;
+    const mealType = document.getElementById('meal_type').value;
+    const energyUsage = document.getElementById('energy_usage').value;
+    
+    if (!transportMode || !mealType || !energyUsage) {
+        e.preventDefault();
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    const transportDistance = parseFloat(document.getElementById('transport_distance').value);
+    if (transportDistance < 0) {
+        e.preventDefault();
+        alert('Distance cannot be negative.');
+        return;
+    }
+});
+</script>
+{% endblock %} 

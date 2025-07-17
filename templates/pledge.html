@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Make a Pledge - GreenTrack{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Pledge Form -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-seedling me-2"></i>Make a Carbon Offset Pledge</h3>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" id="pledgeForm">
+                    <div class="mb-4">
+                        <label for="amount" class="form-label">Amount to Offset (kg CO₂)</label>
+                        <input type="number" class="form-control" id="amount" name="amount" 
+                               min="1" step="1" required>
+                        <div class="form-text">
+                            Each 10 kg CO₂ offset = 1 tree planted
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="pledge_type" class="form-label">Pledge Type</label>
+                        <select class="form-select" id="pledge_type" name="pledge_type" required>
+                            <option value="">Choose pledge type</option>
+                            <option value="tree_planting">Tree Planting</option>
+                            <option value="renewable_energy">Renewable Energy</option>
+                            <option value="carbon_offset">Carbon Offset Project</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Impact Preview -->
+                    <div class="mb-4">
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-leaf me-2"></i>Your Impact</h6>
+                            <div id="impactPreview">
+                                <p class="mb-0">Enter an amount to see your environmental impact.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="fas fa-handshake me-2"></i>Make Pledge
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Pledge Information -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>How Pledges Work</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-tree text-success mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>Tree Planting</h6>
+                            <p class="small text-muted">Trees absorb CO₂ and provide oxygen for our planet.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-solar-panel text-warning mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>Renewable Energy</h6>
+                            <p class="small text-muted">Support solar, wind, and other clean energy projects.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="text-center">
+                            <i class="fas fa-globe text-info mb-2" style="font-size: 1.5rem;"></i>
+                            <h6>Carbon Projects</h6>
+                            <p class="small text-muted">Fund verified carbon reduction initiatives worldwide.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pledge History -->
+    <div class="col-lg-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="mb-0"><i class="fas fa-history me-2"></i>Your Pledge History</h3>
+            </div>
+            <div class="card-body">
+                {% if pledges %}
+                    {% for pledge in pledges %}
+                        <div class="card pledge-card mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ pledge.pledge_type|replace('_', ' ')|title }}</h6>
+                                        <p class="mb-1 small opacity-75">
+                                            {{ pledge.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                        </p>
+                                        <span class="badge bg-light text-dark">{{ pledge.amount }} kg CO₂</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-{{ 'success' if pledge.status == 'completed' else 'warning' if pledge.status == 'pending' else 'secondary' }}">
+                                            {{ pledge.status|title }}
+                                        </span>
+                                        <br>
+                                        <small class="opacity-75">
+                                            {{ (pledge.amount / 10)|round(1) }} trees
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    
+                    <!-- Total Impact Summary -->
+                    <div class="card bg-success text-white mt-4">
+                        <div class="card-body text-center">
+                            <h4 class="mb-2">
+                                <i class="fas fa-trophy me-2"></i>Total Impact
+                            </h4>
+                            <h2 class="mb-1">{{ total_offset }} kg CO₂</h2>
+                            <p class="mb-0">Offset • {{ (total_offset / 10)|round(1) }} Trees Equivalent</p>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-seedling text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted">No pledges yet</h5>
+                        <p class="text-muted">Make your first pledge to start making a positive impact!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Impact Calculator -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-calculator me-2"></i>Impact Calculator</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-success">{{ (total_offset / 1000)|round(3) }}</h6>
+                            <small class="text-muted">Tons CO₂</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-success">{{ (total_offset * 0.0001)|round(4) }}</h6>
+                            <small class="text-muted">% of Global Emissions</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-success">{{ (total_offset * 0.5)|round(1) }}</h6>
+                            <small class="text-muted">Car Miles Saved</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center">
+                            <h6 class="text-success">{{ (total_offset * 0.1)|round(1) }}</h6>
+                            <small class="text-muted">Trees Planted</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function calculateImpact() {
+    const amount = parseFloat(document.getElementById('amount').value) || 0;
+    const pledgeType = document.getElementById('pledge_type').value;
+    
+    let impactText = '';
+    
+    if (amount > 0) {
+        const trees = (amount / 10).toFixed(1);
+        const carMiles = (amount * 0.5).toFixed(1);
+        
+        impactText = `
+            <strong>Your ${amount} kg CO₂ offset will:</strong><br>
+            • Plant ${trees} trees<br>
+            • Save ${carMiles} car miles<br>
+            • Make a real environmental impact
+        `;
+        
+        if (pledgeType) {
+            const typeText = pledgeType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+            impactText += `<br>• Support ${typeText} projects`;
+        }
+    } else {
+        impactText = '<p class="mb-0">Enter an amount to see your environmental impact.</p>';
+    }
+    
+    document.getElementById('impactPreview').innerHTML = impactText;
+}
+
+// Add event listeners for real-time calculation
+document.getElementById('amount').addEventListener('input', calculateImpact);
+document.getElementById('pledge_type').addEventListener('change', calculateImpact);
+
+// Form validation
+document.getElementById('pledgeForm').addEventListener('submit', function(e) {
+    const amount = parseFloat(document.getElementById('amount').value);
+    const pledgeType = document.getElementById('pledge_type').value;
+    
+    if (!amount || amount < 1) {
+        e.preventDefault();
+        alert('Please enter a valid amount (minimum 1 kg CO₂).');
+        return;
+    }
+    
+    if (!pledgeType) {
+        e.preventDefault();
+        alert('Please select a pledge type.');
+        return;
+    }
+    
+    // Confirm pledge
+    if (!confirm(`Are you sure you want to pledge ${amount} kg CO₂ offset?`)) {
+        e.preventDefault();
+        return;
+    }
+});
+
+// Initialize impact calculation
+calculateImpact();
+</script>
+{% endblock %} 
