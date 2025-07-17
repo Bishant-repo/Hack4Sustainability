@@ -1,10 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
-import os
-import json
 from datetime import datetime, timedelta
-import math
 
 app = Flask(__name__)
 app.secret_key = 'greentrack_secret_key_2024'
@@ -39,11 +36,13 @@ CARBON_FACTORS = {
     }
 }
 
+
 @app.route('/')
 def index():
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
     return render_template('index.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -51,86 +50,150 @@ def register():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        
+
         cur = mysql.connection.cursor()
-        
+
         # Check if user already exists
         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
         if cur.fetchone():
             flash('Email already registered!', 'error')
             return render_template('register.html')
-        
+
         # Hash password and insert user
         hashed_password = generate_password_hash(password)
-        cur.execute("INSERT INTO users (name, email, password) VALUES (%s, %s, %s)", 
-                   (name, email, hashed_password))
+        cur.execute(
+            "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
+            (name, email, hashed_password)
+        )
         mysql.connection.commit()
         cur.close()
-        
+
         flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
-    
+
     return render_template('register.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        
+
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
         user = cur.fetchone()
         cur.close()
-        
+
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
             session['user_name'] = user['name']
-            
+
             # Check if user has completed onboarding
             cur = mysql.connection.cursor()
-            cur.execute("SELECT * FROM onboarding WHERE user_id = %s", (user['id'],))
+            cur.execute(
+                "SELECT * FROM onboarding WHERE user_id = %s",
+                (user['id'],)
+            )
             onboarding = cur.fetchone()
             cur.close()
-            
+
             if not onboarding:
                 return redirect(url_for('onboarding'))
             else:
                 return redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password!', 'error')
-    
+
     return render_template('login.html')
+
 
 @app.route('/logout')
 def logout():
     session.clear()
     return redirect(url_for('index'))
 
+
 @app.route('/onboarding', methods=['GET', 'POST'])
 def onboarding():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
+    # Always initialize wizard state if missing
+    if 'onboarding_step' not in session or 'onboarding_answers' not in session:
+        session['onboarding_step'] = 1
+        session['onboarding_answers'] = {}
+
+    step = session['onboarding_step']
+    answers = session['onboarding_answers']
+    progress = int((step - 1) / 3 * 100)
+    base_score = None
+
     if request.method == 'POST':
-        travel_habits = request.form['travel_habits']
-        diet = request.form['diet']
-        energy_usage = request.form['energy_usage']
-        
-        # Calculate base carbon score
-        base_score = calculate_base_score(travel_habits, diet, energy_usage)
-        
-        cur = mysql.connection.cursor()
-        cur.execute("""
-            INSERT INTO onboarding (user_id, travel_habits, diet, energy_usage, base_score, created_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (session['user_id'], travel_habits, diet, energy_usage, base_score, datetime.now()))
-        mysql.connection.commit()
-        cur.close()
-        
-        return redirect(url_for('dashboard'))
-    
-    return render_template('onboarding.html')
+        # Save answer for current step
+        if step == 1 and 'travel_habits' in request.form:
+            answers['travel_habits'] = request.form['travel_habits']
+            session['onboarding_step'] = 2
+        elif step == 2 and 'diet' in request.form:
+            answers['diet'] = request.form['diet']
+            session['onboarding_step'] = 3
+        elif step == 3 and 'energy_usage' in request.form:
+            answers['energy_usage'] = request.form['energy_usage']
+            # Calculate base score
+            base_score = calculate_base_score(
+                answers['travel_habits'],
+                answers['diet'],
+                answers['energy_usage']
+            )
+            # Save to DB
+            cur = mysql.connection.cursor()
+            cur.execute(
+                """
+                INSERT INTO onboarding (user_id, travel_habits, diet, energy_usage, base_score, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    session['user_id'],
+                    answers['travel_habits'],
+                    answers['diet'],
+                    answers['energy_usage'],
+                    base_score,
+                    datetime.now()
+                )
+            )
+            mysql.connection.commit()
+            cur.close()
+            # Set to completion step
+            session['onboarding_step'] = 4
+            session['base_score'] = base_score
+            return redirect(url_for('onboarding'))
+        return redirect(url_for('onboarding'))
+
+    # Show completion step if finished
+    if step == 4 or session.get('onboarding_step') == 4:
+        base_score = session.get('base_score', 0.0)
+        # Show completion step ONCE, then clear onboarding session state and redirect to dashboard on next visit
+        if session.get('onboarding_complete_shown'):
+            session.pop('onboarding_step', None)
+            session.pop('onboarding_answers', None)
+            session.pop('base_score', None)
+            session.pop('onboarding_complete_shown', None)
+            return redirect(url_for('dashboard'))
+        else:
+            session['onboarding_complete_shown'] = True
+            return render_template(
+                'onboarding.html',
+                step=4,
+                progress=100,
+                base_score=base_score
+            )
+
+    return render_template(
+        'onboarding.html',
+        step=step,
+        progress=progress
+    )
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -189,6 +252,7 @@ def dashboard():
                          tips=tips,
                          weekly_data=weekly_data)
 
+
 @app.route('/log', methods=['GET', 'POST'])
 def log_activity():
     if 'user_id' not in session:
@@ -221,6 +285,7 @@ def log_activity():
         return redirect(url_for('dashboard'))
     
     return render_template('log.html')
+
 
 @app.route('/pledge', methods=['GET', 'POST'])
 def pledge():
@@ -259,6 +324,7 @@ def pledge():
     
     return render_template('pledge.html', pledges=pledges, total_offset=total_offset)
 
+
 @app.route('/api/score')
 def get_score():
     if 'user_id' not in session:
@@ -280,6 +346,61 @@ def get_score():
     current_score = calculate_current_score(logs, onboarding['base_score'] if onboarding else 0.0)
     
     return jsonify({'score': current_score})
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    cur = mysql.connection.cursor()
+    # Fetch user info
+    cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+    user = cur.fetchone()
+
+    # Fetch achievements/badges (stub: you can expand this logic)
+    badges = []
+    cur.execute("SELECT COUNT(*) as streak FROM daily_logs WHERE user_id = %s", (session['user_id'],))
+    streak = cur.fetchone()['streak']
+    if streak >= 7:
+        badges.append({'icon': 'fa-fire', 'label': '7-Day Streak'})
+    if streak >= 30:
+        badges.append({'icon': 'fa-crown', 'label': '30-Day Streak'})
+
+    # Preferences (stub: you can expand to use a preferences table)
+    preferences = {'reminders': True, 'streak_alerts': True}
+
+    message = None
+    if request.method == 'POST':
+        name = request.form.get('name', user['name'])
+        email = request.form.get('email', user['email'])
+        password = request.form.get('password', '')
+        # Update user info
+        if password:
+            hashed_password = generate_password_hash(password)
+            cur.execute(
+                "UPDATE users SET name=%s, email=%s, password=%s WHERE id=%s",
+                (name, email, hashed_password, session['user_id'])
+            )
+        else:
+            cur.execute(
+                "UPDATE users SET name=%s, email=%s WHERE id=%s",
+                (name, email, session['user_id'])
+            )
+        mysql.connection.commit()
+        message = 'Profile updated successfully!'
+        # Optionally update preferences here
+        cur.execute("SELECT * FROM users WHERE id = %s", (session['user_id'],))
+        user = cur.fetchone()
+    cur.close()
+    return render_template(
+        'profile.html',
+        user=user,
+        badges=badges,
+        preferences=preferences,
+        message=message
+    )
+
 
 def calculate_base_score(travel_habits, diet, energy_usage):
     """Calculate base carbon score from onboarding data"""
@@ -315,6 +436,7 @@ def calculate_base_score(travel_habits, diet, energy_usage):
     
     return base_score
 
+
 def calculate_current_score(logs, base_score):
     """Calculate current carbon score based on recent logs and base score"""
     if not logs:
@@ -328,6 +450,7 @@ def calculate_current_score(logs, base_score):
     current_score = (float(base_score) + avg_daily_emissions) / 2
     
     return round(current_score, 2)
+
 
 def calculate_weekly_trend(logs):
     """Calculate weekly emission trends for charts"""
@@ -352,6 +475,7 @@ def calculate_weekly_trend(logs):
         })
     
     return trend_data
+
 
 if __name__ == '__main__':
     app.run(debug=True) 

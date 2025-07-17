@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Onboarding | GreenTrack{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="glass-card" style="max-width: 500px; width: 100%;">
+    <!-- Progress Bar -->
+    <div class="mb-4">
+      <div class="progress" style="height: 8px;">
+        <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress|default(0) }}%; transition: width 0.4s;"></div>
+      </div>
+      <div class="text-end small mt-1">
+        {% if step < 4 %}
+          Step {{ step|default(1) }} of 3
+        {% else %}
+          Completed
+        {% endif %}
+      </div>
+    </div>
+    <!-- Question Card -->
+    {% if step == 1 %}
+      <div class="text-center mb-4">
+        <i class="fa-solid fa-car-side fa-2x text-success mb-2"></i>
+        <h4 class="mb-3">How do you usually travel?</h4>
+        <form method="POST">
+          <div class="d-grid gap-2">
+            <button type="submit" name="travel_habits" value="car" class="btn btn-outline-success">🚗 Car</button>
+            <button type="submit" name="travel_habits" value="bus" class="btn btn-outline-success">🚌 Bus</button>
+            <button type="submit" name="travel_habits" value="walk" class="btn btn-outline-success">🚶‍♂️ Walk</button>
+            <button type="submit" name="travel_habits" value="bike" class="btn btn-outline-success">🚲 Bike</button>
+          </div>
+        </form>
+      </div>
+    {% elif step == 2 %}
+      <div class="text-center mb-4">
+        <i class="fa-solid fa-utensils fa-2x text-success mb-2"></i>
+        <h4 class="mb-3">What best describes your diet?</h4>
+        <form method="POST">
+          <div class="d-grid gap-2">
+            <button type="submit" name="diet" value="veg" class="btn btn-outline-success">🥗 Vegetarian</button>
+            <button type="submit" name="diet" value="non_veg" class="btn btn-outline-success">🍗 Non-Vegetarian</button>
+            <button type="submit" name="diet" value="mixed" class="btn btn-outline-success">🍽️ Mixed</button>
+          </div>
+        </form>
+      </div>
+    {% elif step == 3 %}
+      <div class="text-center mb-4">
+        <i class="fa-solid fa-bolt fa-2x text-success mb-2"></i>
+        <h4 class="mb-3">How would you rate your home energy usage?</h4>
+        <form method="POST">
+          <div class="d-grid gap-2">
+            <button type="submit" name="energy_usage" value="low" class="btn btn-outline-success">💡 Low</button>
+            <button type="submit" name="energy_usage" value="medium" class="btn btn-outline-success">🔆 Medium</button>
+            <button type="submit" name="energy_usage" value="high" class="btn btn-outline-success">🔥 High</button>
+          </div>
+        </form>
+      </div>
+    {% elif step == 4 %}
+      <div class="text-center mb-4">
+        <!-- Confetti animation placeholder -->
+        <div id="confetti" style="height: 80px;"></div>
+        <h3 class="mb-3" style="color: var(--primary);">Your Base Carbon Score</h3>
+        <div class="display-4 fw-bold mb-3">{{ base_score|default('0.0') }} kg CO₂/day</div>
+        <p class="lead">Great job! You’ve completed the onboarding. Start tracking your daily activities to reduce your footprint.</p>
+        <a href="/dashboard" class="btn btn-eco mt-3">Go to Dashboard</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<!-- Optionally add a confetti animation library for step 4 -->
+{% if step == 4 %}
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+  confetti({
+    particleCount: 120,
+    spread: 80,
+    origin: { y: 0.6 }
+  });
+</script>
+{% endif %}
+{% endblock %} 

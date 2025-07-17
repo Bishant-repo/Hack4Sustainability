@@ -5,7 +5,7 @@
 {% block content %}
 <div class="row mb-4">
     <div class="col-12">
-        <h2 class="text-white mb-0">
+        <h2 class="mb-0" style="color: var(--primary); font-family: 'Poppins', sans-serif;">
             <i class="fas fa-tachometer-alt me-2"></i>Welcome back, {{ user_name }}!
         </h2>
     </div>
@@ -14,78 +14,96 @@
 <!-- Carbon Score Display -->
 <div class="row mb-4">
     <div class="col-12">
-        <div class="carbon-score">
-            <h2>{{ current_score }} kg CO₂</h2>
+        <div class="glass-card text-center">
+            <div class="display-3 fw-bold mb-2" id="carbonScore" style="color: var(--primary);">{{ current_score }} kg CO₂</div>
             <p class="mb-0">Your Daily Carbon Footprint</p>
             <small class="opacity-75">Updated based on your recent activities</small>
         </div>
     </div>
 </div>
 
-<!-- Quick Stats -->
+<!-- Quick Stats & Badges -->
 <div class="row mb-4">
     <div class="col-md-3 mb-3">
-        <div class="card stats-card">
-            <i class="fas fa-calendar-check text-success"></i>
+        <div class="glass-card text-center">
+            <i class="fas fa-calendar-check text-success fa-2x mb-2"></i>
             <h4>{{ logs|length }}</h4>
             <p class="text-muted mb-0">Days Tracked</p>
         </div>
     </div>
     <div class="col-md-3 mb-3">
-        <div class="card stats-card">
-            <i class="fas fa-seedling text-success"></i>
+        <div class="glass-card text-center">
+            <i class="fas fa-seedling text-success fa-2x mb-2"></i>
             <h4>{{ pledges|length }}</h4>
             <p class="text-muted mb-0">Pledges Made</p>
         </div>
     </div>
     <div class="col-md-3 mb-3">
-        <div class="card stats-card">
-            <i class="fas fa-leaf text-success"></i>
+        <div class="glass-card text-center">
+            <i class="fas fa-leaf text-success fa-2x mb-2"></i>
             <h4>{{ (current_score * 0.1)|round(1) }}</h4>
             <p class="text-muted mb-0">Trees Equivalent</p>
         </div>
     </div>
     <div class="col-md-3 mb-3">
-        <div class="card stats-card">
-            <i class="fas fa-trophy text-warning"></i>
+        <div class="glass-card text-center">
+            <i class="fas fa-trophy text-warning fa-2x mb-2"></i>
             <h4>{{ logs|length // 7 }}</h4>
             <p class="text-muted mb-0">Weeks Active</p>
         </div>
     </div>
 </div>
 
+<!-- Charts Section -->
 <div class="row">
-    <!-- Charts Section -->
     <div class="col-lg-8 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-chart-line me-2"></i>Your Carbon Footprint Trends</h4>
+        <div class="glass-card">
+            <h4 class="mb-3"><i class="fas fa-chart-line me-2"></i>Your Carbon Footprint Trends</h4>
+            {% if weekly_data and weekly_data|length > 0 %}
+            <div class="chart-container">
+                <canvas id="emissionsChart"></canvas>
             </div>
-            <div class="card-body">
-                <div class="chart-container">
-                    <canvas id="emissionsChart"></canvas>
-                </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-chart-line fa-2x mb-3"></i>
+                <div>No data yet. Log some activities to see your carbon trends!</div>
             </div>
+            {% endif %}
         </div>
     </div>
-    
-    <!-- Climate Tips -->
     <div class="col-lg-4 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Climate Tips</h4>
-            </div>
-            <div class="card-body">
-                {% for tip in tips %}
-                <div class="card tip-card mb-3">
-                    <div class="card-body">
-                        <h6 class="card-title">{{ tip.title }}</h6>
-                        <p class="card-text small">{{ tip.content }}</p>
-                        <span class="badge bg-success">{{ tip.category|title }}</span>
-                    </div>
+        <div class="glass-card">
+            <h4 class="mb-3"><i class="fas fa-lightbulb me-2"></i>Climate Tips</h4>
+            {% for tip in tips %}
+            <div class="card tip-card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title">{{ tip.title }}</h6>
+                    <p class="card-text small">{{ tip.content }}</p>
+                    <span class="badge bg-success">{{ tip.category|title }}</span>
                 </div>
-                {% endfor %}
             </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Did You Know Card (interactive, below chart) -->
+<div class="row mb-4">
+    <div class="col-lg-6 col-md-8 col-12">
+        <div class="did-you-know-card" id="didYouKnowCard">
+            <div class="mb-2">
+                <button class="btn btn-eco btn-sm me-2" id="factModeBtn">Fact</button>
+                <button class="btn btn-outline-success btn-sm" id="quizModeBtn">Quiz</button>
+                <button class="btn btn-outline-success btn-sm ms-2" id="refreshFactBtn"><i class="fa fa-sync"></i> New</button>
+            </div>
+            <div class="d-flex align-items-center mb-2">
+                <span class="did-you-know-icon"><i class="fa fa-leaf"></i></span>
+                <span class="fw-bold ms-2">Did You Know?</span>
+            </div>
+            <div class="did-you-know-fact" id="didYouKnowFact"></div>
+            <a href="#" class="did-you-know-link" id="didYouKnowLink" target="_blank" style="display:none;">Learn More</a>
+            <button class="btn btn-outline-success btn-sm mt-2" id="upvoteBtn"><i class="fa fa-thumbs-up"></i> Like</button>
+            <span id="upvoteMsg" class="ms-2 text-success" style="display:none;">Thanks for your feedback!</span>
         </div>
     </div>
 </div>
@@ -93,71 +111,62 @@
 <!-- Recent Activity and Pledges -->
 <div class="row">
     <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-history me-2"></i>Recent Activity</h4>
-            </div>
-            <div class="card-body">
-                {% if logs %}
-                    {% for log in logs[:5] %}
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>
-                            <strong>{{ log.transport_mode|title }}</strong>
-                            {% if log.transport_distance > 0 %}
-                                ({{ log.transport_distance }} km)
-                            {% endif %}
-                            <br>
-                            <small class="text-muted">
-                                {{ log.meal_type|title }} meal • {{ log.energy_usage|title }} energy
-                            </small>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-danger">{{ log.total_emissions }} kg CO₂</span>
-                            <br>
-                            <small class="text-muted">{{ log.created_at.strftime('%b %d') }}</small>
-                        </div>
+        <div class="glass-card">
+            <h4 class="mb-3"><i class="fas fa-history me-2"></i>Recent Activity</h4>
+            {% if logs %}
+                {% for log in logs[:5] %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <strong>{{ log.transport_mode|title }}</strong>
+                        {% if log.transport_distance > 0 %}
+                            ({{ log.transport_distance }} km)
+                        {% endif %}
+                        <br>
+                        <small class="text-muted">
+                            {{ log.meal_type|title }} meal • {{ log.energy_usage|title }} energy
+                        </small>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted text-center">No activities logged yet. 
-                        <a href="{{ url_for('log_activity') }}" class="text-decoration-none">Log your first activity!</a>
-                    </p>
-                {% endif %}
-            </div>
+                    <div class="text-end">
+                        <span class="badge bg-danger">{{ log.total_emissions }} kg CO₂</span>
+                        <br>
+                        <small class="text-muted">{{ log.created_at.strftime('%b %d') }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">No activities logged yet. 
+                    <a href="{{ url_for('log_activity') }}" class="text-decoration-none">Log your first activity!</a>
+                </p>
+            {% endif %}
         </div>
     </div>
-    
     <div class="col-lg-6 mb-4">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-seedling me-2"></i>Recent Pledges</h4>
-            </div>
-            <div class="card-body">
-                {% if pledges %}
-                    {% for pledge in pledges[:5] %}
-                    <div class="card pledge-card mb-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ pledge.pledge_type|replace('_', ' ')|title }}</strong>
-                                    <br>
-                                    <small>{{ pledge.created_at.strftime('%b %d, %Y') }}</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-light text-dark">{{ pledge.amount }} kg CO₂</span>
-                                    <br>
-                                    <small class="opacity-75">{{ pledge.status|title }}</small>
-                                </div>
+        <div class="glass-card">
+            <h4 class="mb-3"><i class="fas fa-seedling me-2"></i>Recent Pledges</h4>
+            {% if pledges %}
+                {% for pledge in pledges[:5] %}
+                <div class="card pledge-card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ pledge.pledge_type|replace('_', ' ')|title }}</strong>
+                                <br>
+                                <small>{{ pledge.created_at.strftime('%b %d, %Y') }}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-light text-dark">{{ pledge.amount }} kg CO₂</span>
+                                <br>
+                                <small class="opacity-75">{{ pledge.status|title }}</small>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <p class="text-muted text-center">No pledges yet. 
-                        <a href="{{ url_for('pledge') }}" class="text-decoration-none">Make your first pledge!</a>
-                    </p>
-                {% endif %}
-            </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted text-center">No pledges yet. 
+                    <a href="{{ url_for('pledge') }}" class="text-decoration-none">Make your first pledge!</a>
+                </p>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -165,27 +174,23 @@
 <!-- Quick Actions -->
 <div class="row">
     <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h4>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('log_activity') }}" class="btn btn-success w-100">
-                            <i class="fas fa-plus me-2"></i>Log Today's Activity
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ url_for('pledge') }}" class="btn btn-primary w-100">
-                            <i class="fas fa-seedling me-2"></i>Make a Pledge
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <button class="btn btn-outline-success w-100" onclick="shareProgress()">
-                            <i class="fas fa-share me-2"></i>Share Progress
-                        </button>
-                    </div>
+        <div class="glass-card">
+            <h4 class="mb-3"><i class="fas fa-bolt me-2"></i>Quick Actions</h4>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <a href="{{ url_for('log_activity') }}" class="btn btn-eco w-100">
+                        <i class="fas fa-plus me-2"></i>Log Today's Activity
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <a href="{{ url_for('pledge') }}" class="btn btn-success w-100">
+                        <i class="fas fa-seedling me-2"></i>Make a Pledge
+                    </a>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <button class="btn btn-outline-success w-100" onclick="shareProgress()">
+                        <i class="fas fa-share me-2"></i>Share Progress
+                    </button>
                 </div>
             </div>
         </div>
@@ -194,84 +199,192 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const didYouKnowFacts = [
+  {
+    text: "Did you know the average person emits about 4.8 metric tons of CO₂ per year?",
+    link: "https://ourworldindata.org/co2-emissions"
+  },
+  {
+    text: "Switching to a plant-based diet can cut your carbon footprint from food by up to 73%.",
+    link: "https://www.science.org/doi/10.1126/science.aaq0216"
+  },
+  {
+    text: "Biking instead of driving just once a day can save up to 0.5kg of CO₂!",
+    link: "https://www.bbc.com/future/article/20200317-climate-change-cut-carbon-footprint-bike"
+  },
+  {
+    text: "Recycling just one aluminum can saves enough energy to run a TV for 3 hours.",
+    link: "https://www.epa.gov/recycle/facts-and-figures-about-materials-waste-and-recycling"
+  },
+  {
+    text: "If everyone in the US used one less plastic bag a day, we’d save over 100 billion bags a year.",
+    link: "https://www.wwf.org.au/news/blogs/the-lifecycle-of-plastic"
+  },
+  {
+    text: "Green energy sources like wind and solar produce almost zero direct emissions.",
+    link: "https://www.iea.org/reports/renewables-2023"
+  },
+  {
+    text: "Turning off unused lights can reduce your household’s carbon emissions by up to 400kg per year.",
+    link: "https://www.energy.gov/energysaver/lighting-choices-save-you-money"
+  }
+];
+const didYouKnowQuizzes = [
+  {
+    question: "Which activity saves the most CO₂?",
+    options: [
+      "Biking instead of driving",
+      "Turning off unused lights",
+      "Recycling one aluminum can"
+    ],
+    answer: 0,
+    link: "https://www.bbc.com/future/article/20200317-climate-change-cut-carbon-footprint-bike"
+  },
+  {
+    question: "What is the average person's annual CO₂ emissions?",
+    options: [
+      "1.2 metric tons",
+      "4.8 metric tons",
+      "10.5 metric tons"
+    ],
+    answer: 1,
+    link: "https://ourworldindata.org/co2-emissions"
+  }
+];
+let mode = 'fact';
+function showRandomDidYouKnow() {
+  const idx = Math.floor(Math.random() * didYouKnowFacts.length);
+  const fact = didYouKnowFacts[idx];
+  document.getElementById('didYouKnowFact').textContent = fact.text;
+  const linkElem = document.getElementById('didYouKnowLink');
+  if (fact.link) {
+    linkElem.href = fact.link;
+    linkElem.style.display = '';
+  } else {
+    linkElem.style.display = 'none';
+  }
+  document.getElementById('upvoteBtn').disabled = false;
+  document.getElementById('upvoteMsg').style.display = 'none';
+}
+function showRandomQuiz() {
+  const idx = Math.floor(Math.random() * didYouKnowQuizzes.length);
+  const quiz = didYouKnowQuizzes[idx];
+  const factDiv = document.getElementById('didYouKnowFact');
+  const linkElem = document.getElementById('didYouKnowLink');
+  let optionsHtml = '';
+  quiz.options.forEach((opt, i) => {
+    optionsHtml += `<button class="quiz-option btn btn-outline-success btn-sm mb-1" data-idx="${i}">${opt}</button><br>`;
+  });
+  factDiv.innerHTML = `<div class="mb-2">${quiz.question}</div>${optionsHtml}`;
+  linkElem.href = quiz.link;
+  linkElem.style.display = '';
+  // Add event listeners for options
+  document.querySelectorAll('.quiz-option').forEach(btn => {
+    btn.onclick = function() {
+      if (parseInt(this.dataset.idx) === quiz.answer) {
+        this.classList.remove('btn-outline-success');
+        this.classList.add('btn-eco');
+        this.textContent += ' ✓';
+      } else {
+        this.classList.remove('btn-outline-success');
+        this.classList.add('btn-danger');
+        this.textContent += ' ✗';
+      }
+      // Disable all options after answer
+      document.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
+    };
+  });
+  document.getElementById('upvoteBtn').disabled = false;
+  document.getElementById('upvoteMsg').style.display = 'none';
+}
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('factModeBtn').onclick = function() {
+    mode = 'fact';
+    this.classList.add('btn-eco');
+    this.classList.remove('btn-outline-success');
+    document.getElementById('quizModeBtn').classList.remove('btn-eco');
+    document.getElementById('quizModeBtn').classList.add('btn-outline-success');
+    showRandomDidYouKnow();
+  };
+  document.getElementById('quizModeBtn').onclick = function() {
+    mode = 'quiz';
+    this.classList.add('btn-eco');
+    this.classList.remove('btn-outline-success');
+    document.getElementById('factModeBtn').classList.remove('btn-eco');
+    document.getElementById('factModeBtn').classList.add('btn-outline-success');
+    showRandomQuiz();
+  };
+  document.getElementById('refreshFactBtn').onclick = function() {
+    if (mode === 'fact') showRandomDidYouKnow();
+    else showRandomQuiz();
+    document.getElementById('upvoteBtn').disabled = false;
+    document.getElementById('upvoteMsg').style.display = 'none';
+  };
+  document.getElementById('upvoteBtn').onclick = function() {
+    this.disabled = true;
+    document.getElementById('upvoteMsg').style.display = '';
+    // Optionally: send upvote to backend via fetch('/api/upvote', ...)
+  };
+  showRandomDidYouKnow();
+});
+</script>
+{% if weekly_data and weekly_data|length > 0 %}
 <script>
 // Chart.js configuration
 const ctx = document.getElementById('emissionsChart').getContext('2d');
-
 const weeklyData = {{ weekly_data|tojson }};
 const labels = weeklyData.map(item => item.week);
 const data = weeklyData.map(item => item.emissions);
-
 new Chart(ctx, {
     type: 'line',
     data: {
         labels: labels,
         datasets: [{
-            label: 'Weekly Carbon Emissions (kg CO₂)',
+            label: 'Weekly Emissions (kg CO₂)',
             data: data,
-            borderColor: '#2ecc71',
-            backgroundColor: 'rgba(46, 204, 113, 0.1)',
-            borderWidth: 3,
+            borderColor: '#4CAF50',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            tension: 0.4,
             fill: true,
-            tension: 0.4
+            pointRadius: 4,
+            pointBackgroundColor: '#4CAF50',
         }]
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
         plugins: {
-            legend: {
-                display: false
-            }
+            legend: { display: false },
         },
         scales: {
             y: {
                 beginAtZero: true,
-                grid: {
-                    color: 'rgba(0,0,0,0.1)'
-                }
+                grid: { color: '#e0e0e0' }
             },
             x: {
-                grid: {
-                    display: false
-                }
+                grid: { color: '#e0e0e0' }
             }
         }
     }
 });
-
-function shareProgress() {
-    const score = {{ current_score }};
-    const text = `I'm tracking my carbon footprint with GreenTrack! My current daily footprint is ${score} kg CO₂. Join me in making a positive impact on our planet! 🌱`;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: 'My GreenTrack Progress',
-            text: text,
-            url: window.location.origin
-        });
-    } else {
-        // Fallback for browsers that don't support Web Share API
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        alert('Progress copied to clipboard!');
+// Animate carbon score
+const scoreElem = document.getElementById('carbonScore');
+if (scoreElem) {
+    let val = 0;
+    const target = parseFloat(scoreElem.textContent);
+    const step = target / 40;
+    function animateScore() {
+        val += step;
+        if (val >= target) {
+            scoreElem.textContent = target.toFixed(2) + ' kg CO₂';
+        } else {
+            scoreElem.textContent = val.toFixed(2) + ' kg CO₂';
+            requestAnimationFrame(animateScore);
+        }
     }
+    animateScore();
 }
-
-// Auto-refresh carbon score every 30 seconds
-setInterval(function() {
-    fetch('/api/score')
-        .then(response => response.json())
-        .then(data => {
-            if (data.score) {
-                document.querySelector('.carbon-score h2').textContent = data.score + ' kg CO₂';
-            }
-        })
-        .catch(error => console.log('Error updating score:', error));
-}, 30000);
 </script>
+{% endif %}
 {% endblock %} 

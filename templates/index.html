@@ -3,105 +3,81 @@
 {% block title %}GreenTrack - Track Your Carbon Footprint{% endblock %}
 
 {% block content %}
-<div class="row align-items-center min-vh-100">
-    <div class="col-lg-6">
-        <div class="text-white">
-            <h1 class="display-4 fw-bold mb-4">
-                <i class="fas fa-leaf text-success me-3"></i>
-                Track Your Carbon Footprint
-            </h1>
-            <p class="lead mb-4">
-                Join thousands of people who are taking action against climate change. 
-                Track your daily activities, reduce your carbon footprint, and make a positive impact on our planet.
-            </p>
-            <div class="d-flex gap-3">
-                <a href="{{ url_for('register') }}" class="btn btn-success btn-lg">
-                    <i class="fas fa-user-plus me-2"></i>Get Started
-                </a>
-                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg">
-                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                </a>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-body p-5">
-                <h3 class="text-center mb-4">Why Choose GreenTrack?</h3>
-                <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <div class="text-center">
-                            <i class="fas fa-chart-line text-success mb-3" style="font-size: 2rem;"></i>
-                            <h5>Smart Tracking</h5>
-                            <p class="text-muted">Track your daily activities and see your carbon footprint in real-time.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="text-center">
-                            <i class="fas fa-lightbulb text-warning mb-3" style="font-size: 2rem;"></i>
-                            <h5>Personalized Tips</h5>
-                            <p class="text-muted">Get customized suggestions to reduce your environmental impact.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="text-center">
-                            <i class="fas fa-seedling text-success mb-3" style="font-size: 2rem;"></i>
-                            <h5>Offset Impact</h5>
-                            <p class="text-muted">Pledge to plant trees and support renewable energy projects.</p>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-4">
-                        <div class="text-center">
-                            <i class="fas fa-trophy text-primary mb-3" style="font-size: 2rem;"></i>
-                            <h5>Earn Rewards</h5>
-                            <p class="text-muted">Build streaks and earn achievements for sustainable habits.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div class="eco-landing-bg">
+  <!-- SVG waves and leaves for background -->
+  <svg class="eco-waves" viewBox="0 0 1440 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#E6F4EA" d="M0,400 Q360,300 720,400 T1440,400 V600H0Z"/>
+    <path fill="#FDF6EC" d="M0,500 Q360,450 720,500 T1440,500 V600H0Z"/>
+    <path fill="#C8E6C9" d="M0,550 Q360,520 720,550 T1440,550 V600H0Z"/>
+    <path fill="#FFE5D0" d="M0,580 Q360,570 720,580 T1440,580 V600H0Z"/>
+  </svg>
+  <svg class="eco-leaf leaf1" width="80" height="80" viewBox="0 0 80 80">
+    <ellipse cx="40" cy="60" rx="18" ry="40" fill="#A5D6A7" transform="rotate(-20 40 60)"/>
+  </svg>
+  <svg class="eco-leaf leaf2" width="60" height="60" viewBox="0 0 60 60">
+    <ellipse cx="30" cy="40" rx="12" ry="28" fill="#81C784" transform="rotate(15 30 40)"/>
+  </svg>
 </div>
-
-<div class="row mt-5">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="mb-0"><i class="fas fa-info-circle me-2"></i>How It Works</h3>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-3 text-center mb-4">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <span class="h3 mb-0">1</span>
-                        </div>
-                        <h5>Sign Up</h5>
-                        <p class="text-muted">Create your account and complete a quick lifestyle assessment.</p>
-                    </div>
-                    <div class="col-md-3 text-center mb-4">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <span class="h3 mb-0">2</span>
-                        </div>
-                        <h5>Log Activities</h5>
-                        <p class="text-muted">Record your daily transport, meals, and energy usage.</p>
-                    </div>
-                    <div class="col-md-3 text-center mb-4">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <span class="h3 mb-0">3</span>
-                        </div>
-                        <h5>Track Progress</h5>
-                        <p class="text-muted">Monitor your carbon footprint and see your impact over time.</p>
-                    </div>
-                    <div class="col-md-3 text-center mb-4">
-                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                            <span class="h3 mb-0">4</span>
-                        </div>
-                        <h5>Make Impact</h5>
-                        <p class="text-muted">Offset your emissions and contribute to environmental projects.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Main landing content -->
+<div class="d-flex justify-content-center align-items-center flex-column flex-md-row min-vh-100">
+  <div class="col-lg-6 mb-4 mb-lg-0">
+    <div class="glass-card text-center">
+      <h1 class="display-5 fw-bold mb-3" style="color: var(--primary); font-family: 'Poppins', sans-serif;">
+        <i class="fas fa-leaf text-success me-2"></i>Track Your Carbon Footprint
+      </h1>
+      <p class="lead mb-4">
+        Join thousands taking action against climate change.<br>
+        Track your daily activities, reduce your carbon footprint, and make a positive impact on our planet.
+      </p>
+      <div class="d-flex justify-content-center gap-3 mb-3">
+        <a href="{{ url_for('register') }}" class="btn btn-eco btn-lg">
+          <i class="fas fa-user-plus me-2"></i>Get Started
+        </a>
+        <a href="{{ url_for('login') }}" class="btn btn-outline-success btn-lg">
+          <i class="fas fa-sign-in-alt me-2"></i>Login
+        </a>
+      </div>
+      <div class="d-flex justify-content-center gap-2 mt-2">
+        <span class="badge bg-success">Eco-Friendly</span>
+        <span class="badge bg-success">Gamified</span>
+        <span class="badge bg-success">Data-Driven</span>
+      </div>
     </div>
+  </div>
+  <div class="col-lg-6 d-flex align-items-center justify-content-center">
+    <div class="glass-card w-100">
+      <h3 class="text-center mb-4"><i class="fas fa-info-circle me-2"></i>How It Works</h3>
+      <div class="row g-3">
+        <div class="col-6 col-md-3 text-center">
+          <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 70px; height: 70px;">
+            <i class="fas fa-user-plus fa-2x text-success"></i>
+          </div>
+          <h6 class="fw-bold">Sign Up</h6>
+          <span class="small text-muted">Create your account and complete a quick lifestyle assessment.</span>
+        </div>
+        <div class="col-6 col-md-3 text-center">
+          <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 70px; height: 70px;">
+            <i class="fas fa-pen fa-2x text-success"></i>
+          </div>
+          <h6 class="fw-bold">Log</h6>
+          <span class="small text-muted">Record your daily transport, meals, and energy usage.</span>
+        </div>
+        <div class="col-6 col-md-3 text-center">
+          <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 70px; height: 70px;">
+            <i class="fas fa-chart-line fa-2x text-success"></i>
+          </div>
+          <h6 class="fw-bold">Track</h6>
+          <span class="small text-muted">Monitor your carbon footprint and see your impact over time.</span>
+        </div>
+        <div class="col-6 col-md-3 text-center">
+          <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-2" style="width: 70px; height: 70px;">
+            <i class="fas fa-seedling fa-2x text-success"></i>
+          </div>
+          <h6 class="fw-bold">Offset</h6>
+          <span class="small text-muted">Offset your emissions and support environmental projects.</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %} 
