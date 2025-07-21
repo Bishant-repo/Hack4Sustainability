@@ -24,6 +24,7 @@
                                     <option value="train">Train</option>
                                     <option value="walk">Walking</option>
                                     <option value="bike">Bicycle</option>
+                                    <option value="motorbike">Motorcycle</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -31,6 +32,16 @@
                                 <input type="number" class="form-control" id="transport_distance" name="transport_distance" 
                                        min="0" step="0.1" value="0" required>
                                 <div class="form-text">Enter 0 for walking/biking</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Transport Carbon Impact Preview -->
+                        <div class="mt-3">
+                            <div class="alert alert-success" id="transportPreview" style="display: none;">
+                                <h6><i class="fas fa-leaf me-2"></i>Transport Carbon Impact</h6>
+                                <div id="transportImpact">
+                                    <p class="mb-0">Select transport mode and enter distance to see impact.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -131,7 +142,8 @@ const carbonFactors = {
         bus: 0.05,
         train: 0.04,
         walk: 0,
-        bike: 0
+        bike: 0,
+        motorbike: 0.15  // kg CO2 per km
     },
     diet: {
         veg: 0.5,     // kg CO2 per meal
@@ -144,6 +156,59 @@ const carbonFactors = {
         high: 10
     }
 };
+
+function calculateTransportImpact() {
+    const transportMode = document.getElementById('transport_mode').value;
+    const transportDistance = parseFloat(document.getElementById('transport_distance').value) || 0;
+    
+    const transportPreview = document.getElementById('transportPreview');
+    const transportImpact = document.getElementById('transportImpact');
+    
+    if (transportMode && transportDistance >= 0) {
+        const transportEmissions = carbonFactors.transport[transportMode] * transportDistance;
+        const transportNames = {
+            'car': 'Car',
+            'bus': 'Bus',
+            'train': 'Train',
+            'walk': 'Walking',
+            'bike': 'Bicycle',
+            'motorbike': 'Motorcycle'
+        };
+        
+        let impactText = '';
+        let alertClass = 'alert-success';
+        
+        if (transportEmissions === 0) {
+            impactText = `
+                <strong>🌱 Zero Emissions!</strong><br>
+                <small class="text-muted">${transportNames[transportMode]} for ${transportDistance}km = 0 kg CO₂</small><br>
+                <small class="text-success">Excellent choice for the environment!</small>
+            `;
+        } else {
+            impactText = `
+                <strong>${transportEmissions.toFixed(2)} kg CO₂</strong><br>
+                <small class="text-muted">${transportNames[transportMode]} for ${transportDistance}km</small>
+            `;
+            
+            // Color coding based on emissions
+            if (transportEmissions > 1) {
+                alertClass = 'alert-warning';
+                impactText += '<br><small class="text-warning">Consider public transport or cycling for shorter trips.</small>';
+            } else if (transportEmissions > 0.5) {
+                alertClass = 'alert-info';
+                impactText += '<br><small class="text-info">Moderate impact. Consider alternatives for future trips.</small>';
+            } else {
+                impactText += '<br><small class="text-success">Good choice! Lower emissions than car.</small>';
+            }
+        }
+        
+        transportImpact.innerHTML = impactText;
+        transportPreview.className = `alert ${alertClass}`;
+        transportPreview.style.display = 'block';
+    } else {
+        transportPreview.style.display = 'none';
+    }
+}
 
 function calculateCarbonFootprint() {
     const transportMode = document.getElementById('transport_mode').value;
@@ -190,8 +255,14 @@ function calculateCarbonFootprint() {
 }
 
 // Add event listeners for real-time calculation
-document.getElementById('transport_mode').addEventListener('change', calculateCarbonFootprint);
-document.getElementById('transport_distance').addEventListener('input', calculateCarbonFootprint);
+document.getElementById('transport_mode').addEventListener('change', function() {
+    calculateTransportImpact();
+    calculateCarbonFootprint();
+});
+document.getElementById('transport_distance').addEventListener('input', function() {
+    calculateTransportImpact();
+    calculateCarbonFootprint();
+});
 document.getElementById('meal_type').addEventListener('change', calculateCarbonFootprint);
 document.getElementById('energy_usage').addEventListener('change', calculateCarbonFootprint);
 

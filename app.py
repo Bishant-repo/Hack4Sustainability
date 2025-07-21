@@ -22,7 +22,8 @@ CARBON_FACTORS = {
         'bus': 0.05,
         'train': 0.04,
         'walk': 0,
-        'bike': 0
+        'bike': 0,
+        'motorbike': 0.15  # kg CO2 per km (lower than car but higher than public transport)
     },
     'diet': {
         'veg': 0.5,  # kg CO2 per meal

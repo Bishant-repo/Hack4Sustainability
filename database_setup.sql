@@ -17,7 +17,7 @@ CREATE TABLE users (
 CREATE TABLE onboarding (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    travel_habits ENUM('car', 'bus', 'train', 'walk', 'bike') NOT NULL,
+    travel_habits ENUM('car', 'bus', 'train', 'walk', 'bike', 'motorbike') NOT NULL,
     diet ENUM('veg', 'non_veg', 'mixed') NOT NULL,
     energy_usage ENUM('low', 'medium', 'high') NOT NULL,
     base_score DECIMAL(10,2) NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE onboarding (
 CREATE TABLE daily_logs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    transport_mode ENUM('car', 'bus', 'train', 'walk', 'bike') NOT NULL,
+    transport_mode ENUM('car', 'bus', 'train', 'walk', 'bike', 'motorbike') NOT NULL,
     transport_distance DECIMAL(10,2) DEFAULT 0,
     meal_type ENUM('veg', 'non_veg', 'mixed') NOT NULL,
     energy_usage ENUM('low', 'medium', 'high') NOT NULL,

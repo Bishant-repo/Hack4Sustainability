@@ -104,7 +104,7 @@ MYSQL_DB=greentrack
 
 The application uses industry-standard carbon factors:
 
-- **Transport**: Car (0.2 kg CO2/km), Bus (0.05 kg CO2/km), Train (0.04 kg CO2/km)
+- **Transport**: Car (0.2 kg CO2/km), Bus (0.05 kg CO2/km), Train (0.04 kg CO2/km), Motorcycle (0.15 kg CO2/km), Walk/Bike (0 kg CO2/km)
 - **Diet**: Vegetarian (0.5 kg CO2/meal), Non-vegetarian (2.5 kg CO2/meal), Mixed (1.5 kg CO2/meal)
 - **Energy**: Low (2 kg CO2/day), Medium (5 kg CO2/day), High (10 kg CO2/day)
 
