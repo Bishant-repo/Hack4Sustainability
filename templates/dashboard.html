@@ -47,9 +47,20 @@
     </div>
     <div class="col-md-3 mb-3">
         <div class="glass-card text-center">
-            <i class="fas fa-trophy text-warning fa-2x mb-2"></i>
-            <h4>{{ logs|length // 7 }}</h4>
+            <i class="fas fa-trophy text-warning fa-2x mb-2" data-bs-toggle="tooltip" title="Weeks Active is calculated as the number of weeks you've logged at least one activity."></i>
+            <h4>
+                {% if logs|length // 7 > 0 %}
+                    {{ logs|length // 7 }}
+                {% elif logs|length > 0 %}
+                    1+
+                {% else %}
+                    0
+                {% endif %}
+            </h4>
             <p class="text-muted mb-0">Weeks Active</p>
+            {% if logs|length // 7 == 0 %}
+                <div class="small text-warning mt-1">Log activities each week to build your streak!</div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -60,8 +71,8 @@
         <div class="glass-card">
             <h4 class="mb-3"><i class="fas fa-chart-line me-2"></i>Your Carbon Footprint Trends</h4>
             {% if weekly_data and weekly_data|length > 0 %}
-            <div class="chart-container">
-                <canvas id="emissionsChart"></canvas>
+            <div class="chart-container" style="background: #f8fff4; border-radius: 1rem; box-shadow: 0 2px 8px #e0f2e9; padding: 1.5rem;">
+                <canvas id="emissionsChart" height="120"></canvas>
             </div>
             {% else %}
             <div class="text-center text-muted py-5">
@@ -90,20 +101,26 @@
 <!-- Did You Know Card (interactive, below chart) -->
 <div class="row mb-4">
     <div class="col-lg-6 col-md-8 col-12">
-        <div class="did-you-know-card" id="didYouKnowCard">
-            <div class="mb-2">
+        <div class="did-you-know-card p-4 shadow rounded" id="didYouKnowCard" style="background: #f8fff4; border: 1px solid #e0f2e9;">
+            <div class="mb-2 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="did-you-know-icon me-2" style="font-size: 1.5rem; color: #4CAF50;"><i class="fa fa-leaf"></i></span>
+                    <span class="fw-bold" style="font-size: 1.2rem;">Did You Know?</span>
+                </div>
+                <span class="badge bg-info text-dark" data-bs-toggle="tooltip" title="Fun facts and quizzes about your carbon footprint, inspired by carbonfootprint.com">i</span>
+            </div>
+            <div class="mb-2 text-muted small">Discover climate facts and test your knowledge to become more eco-aware!</div>
+            <div class="mb-3">
                 <button class="btn btn-eco btn-sm me-2" id="factModeBtn">Fact</button>
                 <button class="btn btn-outline-success btn-sm" id="quizModeBtn">Quiz</button>
-                <button class="btn btn-outline-success btn-sm ms-2" id="refreshFactBtn"><i class="fa fa-sync"></i> New</button>
+                <button class="btn btn-outline-success btn-sm ms-2" id="refreshFactBtn"><i class="fa fa-sync"></i> Next Fact</button>
             </div>
-            <div class="d-flex align-items-center mb-2">
-                <span class="did-you-know-icon"><i class="fa fa-leaf"></i></span>
-                <span class="fw-bold ms-2">Did You Know?</span>
+            <div class="did-you-know-fact mb-2 p-2 rounded" id="didYouKnowFact" style="background: #eafaf1; min-height: 48px;"></div>
+            <a href="#" class="did-you-know-link small" id="didYouKnowLink" target="_blank" style="display:none; color: #388e3c; text-decoration: underline;">Learn More</a>
+            <div class="mt-2">
+                <button class="btn btn-outline-success btn-sm" id="upvoteBtn"><i class="fa fa-thumbs-up"></i> Like</button>
+                <span id="upvoteMsg" class="ms-2 text-success" style="display:none;">Thanks for your feedback!</span>
             </div>
-            <div class="did-you-know-fact" id="didYouKnowFact"></div>
-            <a href="#" class="did-you-know-link" id="didYouKnowLink" target="_blank" style="display:none;">Learn More</a>
-            <button class="btn btn-outline-success btn-sm mt-2" id="upvoteBtn"><i class="fa fa-thumbs-up"></i> Like</button>
-            <span id="upvoteMsg" class="ms-2 text-success" style="display:none;">Thanks for your feedback!</span>
         </div>
     </div>
 </div>
@@ -200,64 +217,75 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <script>
 const didYouKnowFacts = [
   {
-    text: "Did you know the average person emits about 4.8 metric tons of CO₂ per year?",
-    link: "https://ourworldindata.org/co2-emissions"
+    text: "A return flight from London to New York emits about 986 kg CO₂ per passenger.",
+    link: "https://www.carbonfootprint.com/calculator.aspx"
   },
   {
-    text: "Switching to a plant-based diet can cut your carbon footprint from food by up to 73%.",
-    link: "https://www.science.org/doi/10.1126/science.aaq0216"
+    text: "Switching to renewable energy at home can reduce your carbon footprint by up to 50%.",
+    link: "https://www.carbonfootprint.com/reduce.html"
   },
   {
-    text: "Biking instead of driving just once a day can save up to 0.5kg of CO₂!",
-    link: "https://www.bbc.com/future/article/20200317-climate-change-cut-carbon-footprint-bike"
+    text: "Planting one tree can offset roughly 1 ton of CO₂ over its lifetime.",
+    link: "https://www.carbonfootprint.com/offset.aspx"
   },
   {
-    text: "Recycling just one aluminum can saves enough energy to run a TV for 3 hours.",
-    link: "https://www.epa.gov/recycle/facts-and-figures-about-materials-waste-and-recycling"
+    text: "Driving a typical car for 10,000 km emits about 2,000 kg CO₂.",
+    link: "https://www.carbonfootprint.com/calculator.aspx"
   },
   {
-    text: "If everyone in the US used one less plastic bag a day, we’d save over 100 billion bags a year.",
-    link: "https://www.wwf.org.au/news/blogs/the-lifecycle-of-plastic"
+    text: "Taking the train instead of flying can cut your travel emissions by up to 90%.",
+    link: "https://www.carbonfootprint.com/information.html"
   },
   {
-    text: "Green energy sources like wind and solar produce almost zero direct emissions.",
-    link: "https://www.iea.org/reports/renewables-2023"
+    text: "Offsetting your carbon footprint supports global climate projects and tree planting.",
+    link: "https://www.carbonfootprint.com/offset.aspx"
   },
   {
-    text: "Turning off unused lights can reduce your household’s carbon emissions by up to 400kg per year.",
-    link: "https://www.energy.gov/energysaver/lighting-choices-save-you-money"
+    text: "The average UK household emits about 8.1 tons of CO₂ per year.",
+    link: "https://www.carbonfootprint.com/calculator.aspx"
   }
 ];
 const didYouKnowQuizzes = [
   {
-    question: "Which activity saves the most CO₂?",
+    question: "Which activity produces the most CO₂ per km?",
     options: [
-      "Biking instead of driving",
-      "Turning off unused lights",
-      "Recycling one aluminum can"
+      "Flying (Airplane)",
+      "Driving a car",
+      "Taking the train"
     ],
     answer: 0,
-    link: "https://www.bbc.com/future/article/20200317-climate-change-cut-carbon-footprint-bike"
+    link: "https://www.carbonfootprint.com/calculator.aspx"
   },
   {
-    question: "What is the average person's annual CO₂ emissions?",
+    question: "How much CO₂ does planting one tree offset over its lifetime?",
     options: [
-      "1.2 metric tons",
-      "4.8 metric tons",
-      "10.5 metric tons"
+      "About 1 ton",
+      "About 100 kg",
+      "About 10 tons"
     ],
-    answer: 1,
-    link: "https://ourworldindata.org/co2-emissions"
+    answer: 0,
+    link: "https://www.carbonfootprint.com/offset.aspx"
+  },
+  {
+    question: "What is a simple way to reduce your home’s carbon footprint?",
+    options: [
+      "Switch to renewable energy",
+      "Use more plastic bags",
+      "Fly more often"
+    ],
+    answer: 0,
+    link: "https://www.carbonfootprint.com/reduce.html"
   }
 ];
 let mode = 'fact';
 function showRandomDidYouKnow() {
   const idx = Math.floor(Math.random() * didYouKnowFacts.length);
   const fact = didYouKnowFacts[idx];
-  document.getElementById('didYouKnowFact').textContent = fact.text;
+  document.getElementById('didYouKnowFact').innerHTML = `<i class='fa fa-info-circle text-success me-2'></i> ${fact.text}`;
   const linkElem = document.getElementById('didYouKnowLink');
   if (fact.link) {
     linkElem.href = fact.link;
@@ -275,9 +303,9 @@ function showRandomQuiz() {
   const linkElem = document.getElementById('didYouKnowLink');
   let optionsHtml = '';
   quiz.options.forEach((opt, i) => {
-    optionsHtml += `<button class="quiz-option btn btn-outline-success btn-sm mb-1" data-idx="${i}">${opt}</button><br>`;
+    optionsHtml += `<button class="quiz-option btn btn-outline-success btn-sm mb-1 w-100 text-start" data-idx="${i}"><i class='fa fa-question-circle me-1'></i> ${opt}</button><br>`;
   });
-  factDiv.innerHTML = `<div class="mb-2">${quiz.question}</div>${optionsHtml}`;
+  factDiv.innerHTML = `<div class="mb-2"><i class='fa fa-question text-warning me-2'></i>${quiz.question}</div>${optionsHtml}`;
   linkElem.href = quiz.link;
   linkElem.style.display = '';
   // Add event listeners for options
@@ -285,12 +313,12 @@ function showRandomQuiz() {
     btn.onclick = function() {
       if (parseInt(this.dataset.idx) === quiz.answer) {
         this.classList.remove('btn-outline-success');
-        this.classList.add('btn-eco');
-        this.textContent += ' ✓';
+        this.classList.add('btn-success');
+        this.innerHTML += ' <i class="fa fa-check"></i> Correct!';
       } else {
         this.classList.remove('btn-outline-success');
         this.classList.add('btn-danger');
-        this.textContent += ' ✗';
+        this.innerHTML += ' <i class="fa fa-times"></i> Try again!';
       }
       // Disable all options after answer
       document.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
@@ -337,6 +365,9 @@ const ctx = document.getElementById('emissionsChart').getContext('2d');
 const weeklyData = {{ weekly_data|tojson }};
 const labels = weeklyData.map(item => item.week);
 const data = weeklyData.map(item => item.emissions);
+const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+gradient.addColorStop(0, 'rgba(76, 175, 80, 0.3)');
+gradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
 new Chart(ctx, {
     type: 'line',
     data: {
@@ -344,29 +375,81 @@ new Chart(ctx, {
         datasets: [{
             label: 'Weekly Emissions (kg CO₂)',
             data: data,
-            borderColor: '#4CAF50',
-            backgroundColor: 'rgba(76, 175, 80, 0.1)',
-            tension: 0.4,
+            borderColor: '#388e3c',
+            backgroundColor: gradient,
+            tension: 0.35,
             fill: true,
-            pointRadius: 4,
-            pointBackgroundColor: '#4CAF50',
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: '#43a047',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
         }]
     },
     options: {
         responsive: true,
         plugins: {
-            legend: { display: false },
+            legend: {
+                display: true,
+                labels: {
+                    color: '#388e3c',
+                    font: { size: 14, weight: 'bold' }
+                }
+            },
+            title: {
+                display: true,
+                text: 'Your Weekly Carbon Footprint',
+                color: '#222',
+                font: { size: 20, weight: 'bold', family: 'Poppins, sans-serif' }
+            },
+            tooltip: {
+                enabled: true,
+                callbacks: {
+                    label: function(context) {
+                        return ` ${context.parsed.y} kg CO₂`;
+                    }
+                },
+                backgroundColor: '#43a047',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#fff',
+                borderWidth: 1
+            },
+            datalabels: {
+                display: true,
+                color: '#222',
+                font: { weight: 'bold' },
+                align: 'top',
+                formatter: function(value) {
+                    return value + ' kg';
+                }
+            }
         },
         scales: {
             y: {
                 beginAtZero: true,
-                grid: { color: '#e0e0e0' }
+                title: {
+                    display: true,
+                    text: 'Emissions (kg CO₂)',
+                    color: '#388e3c',
+                    font: { size: 16, weight: 'bold' }
+                },
+                grid: { color: '#e0e0e0' },
+                ticks: { color: '#388e3c', font: { size: 13 } }
             },
             x: {
-                grid: { color: '#e0e0e0' }
+                title: {
+                    display: true,
+                    text: 'Week',
+                    color: '#388e3c',
+                    font: { size: 16, weight: 'bold' }
+                },
+                grid: { color: '#e0e0e0' },
+                ticks: { color: '#388e3c', font: { size: 13 } }
             }
         }
-    }
+    },
+    plugins: [ChartDataLabels]
 });
 // Animate carbon score
 const scoreElem = document.getElementById('carbonScore');
@@ -384,6 +467,13 @@ if (scoreElem) {
         }
     }
     animateScore();
+}
+// Tooltip activation for info badge and trophy
+if (window.bootstrap) {
+  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new window.bootstrap.Tooltip(tooltipTriggerEl);
+  });
 }
 </script>
 {% endif %}

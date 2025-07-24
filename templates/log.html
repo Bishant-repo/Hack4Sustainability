@@ -19,13 +19,17 @@
                                 <label for="transport_mode" class="form-label">Mode of Transport</label>
                                 <select class="form-select" id="transport_mode" name="transport_mode" required>
                                     <option value="">Choose transport mode</option>
-                                    <option value="car">Car</option>
-                                    <option value="bus">Bus</option>
-                                    <option value="train">Train</option>
-                                    <option value="walk">Walking</option>
-                                    <option value="bike">Bicycle</option>
-                                    <option value="motorbike">Motorcycle</option>
+                                    <option value="car">🚗 Car</option>
+                                    <option value="bus">🚌 Bus</option>
+                                    <option value="train">🚆 Train</option>
+                                    <option value="walk">🚶‍♂️ Walking</option>
+                                    <option value="bike">🚲 Bicycle</option>
+                                    <option value="motorbike">🏍️ Motorcycle</option>
+                                    <option value="airplane">✈️ Airplane</option>
                                 </select>
+                                <div class="form-text" id="airplaneNote" style="display:none; color:#c62828; font-weight:500;">
+                                    <i class="fas fa-plane me-1"></i> Airplane travel emits about 0.255 kg CO₂ per km per passenger (<a href="https://www.carbonfootprint.com/calculator.aspx" target="_blank">source</a>).
+                                </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="transport_distance" class="form-label">Distance (km)</label>
@@ -54,10 +58,11 @@
                                 <label for="meal_type" class="form-label">Today's Main Meal Type</label>
                                 <select class="form-select" id="meal_type" name="meal_type" required>
                                     <option value="">Choose meal type</option>
-                                    <option value="veg">Vegetarian</option>
-                                    <option value="non_veg">Non-Vegetarian</option>
-                                    <option value="mixed">Mixed (Some meat, some veg)</option>
+                                    <option value="veg">🥗 Vegetarian (Low carbon: mostly plant-based)</option>
+                                    <option value="non_veg">🍗 Non-Vegetarian (High carbon: includes meat/fish)</option>
+                                    <option value="mixed">🍽️ Mixed (Medium carbon: some meat, some veg)</option>
                                 </select>
+                                <div id="mealTypeInfo" class="form-text mt-2" style="display:none;"></div>
                             </div>
                         </div>
                     </div>
@@ -70,13 +75,11 @@
                                 <label for="energy_usage" class="form-label">Energy Consumption Level</label>
                                 <select class="form-select" id="energy_usage" name="energy_usage" required>
                                     <option value="">Choose energy level</option>
-                                    <option value="low">Low (Conscious usage)</option>
-                                    <option value="medium">Medium (Average usage)</option>
-                                    <option value="high">High (Heavy usage)</option>
+                                    <option value="low">🔋 Low (Conscious usage: minimal appliances, lights off, no AC, ~2-4 kWh/day)</option>
+                                    <option value="medium">💡 Medium (Average usage: regular appliances, some AC/fans, lights on, ~5-10 kWh/day)</option>
+                                    <option value="high">⚡ High (Heavy usage: frequent AC, many electronics, high lighting, ~11+ kWh/day)</option>
                                 </select>
-                                <div class="form-text">
-                                    Consider factors like AC usage, electronics, and overall energy consumption
-                                </div>
+                                <div id="energyUsageInfo" class="form-text mt-2" style="display:none;"></div>
                             </div>
                         </div>
                     </div>
@@ -87,6 +90,12 @@
                             <h6><i class="fas fa-info-circle me-2"></i>Carbon Impact Preview</h6>
                             <div id="carbonPreview">
                                 <p class="mb-0">Fill in the form above to see your estimated carbon impact.</p>
+                                <ul class="list-unstyled mt-2" id="carbonBreakdown" style="display:none;">
+                                    <li><i class="fas fa-car me-1"></i> Transport: <span id="previewTransport">0</span> kg CO₂</li>
+                                    <li><i class="fas fa-utensils me-1"></i> Diet: <span id="previewDiet">0</span> kg CO₂</li>
+                                    <li><i class="fas fa-bolt me-1"></i> Energy: <span id="previewEnergy">0</span> kg CO₂</li>
+                                    <li class="fw-bold mt-2">Total: <span id="previewTotal">0</span> kg CO₂</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -107,23 +116,29 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <div class="text-center">
-                            <i class="fas fa-walking text-success mb-2" style="font-size: 1.5rem;"></i>
-                            <h6>Walk or Bike</h6>
-                            <p class="small text-muted">For short trips under 2km, walking or biking can reduce emissions by 100%.</p>
+                            <i class="fas fa-walking text-success mb-2" style="font-size: 2rem;"></i>
+                            <h6 class="fw-bold">Walk or Bike</h6>
+                            <p class="small text-muted mb-1">For short trips under 2km, walking or biking can reduce emissions by <span class="fw-bold text-success">100%</span>.</p>
+                            <span class="badge bg-success">Zero Emissions</span>
+                            <div class="mt-2 small">Try to walk or cycle for errands, school, or work when possible. It’s healthy and eco-friendly!</div>
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
                         <div class="text-center">
-                            <i class="fas fa-seedling text-success mb-2" style="font-size: 1.5rem;"></i>
-                            <h6>Choose Plant-Based</h6>
-                            <p class="small text-muted">Vegetarian meals can reduce your carbon footprint by up to 50%.</p>
+                            <i class="fas fa-seedling text-success mb-2" style="font-size: 2rem;"></i>
+                            <h6 class="fw-bold">Choose Plant-Based</h6>
+                            <p class="small text-muted mb-1">Vegetarian meals can reduce your carbon footprint by up to <span class="fw-bold text-success">50%</span>.</p>
+                            <span class="badge bg-info text-dark">Low Carbon</span>
+                            <div class="mt-2 small">Try a meat-free day each week or swap red meat for beans, lentils, or tofu.</div>
                         </div>
                     </div>
                     <div class="col-md-4 mb-3">
                         <div class="text-center">
-                            <i class="fas fa-leaf text-success mb-2" style="font-size: 1.5rem;"></i>
-                            <h6>Conserve Energy</h6>
-                            <p class="small text-muted">Turn off unused electronics and use energy-efficient appliances.</p>
+                            <i class="fas fa-bolt text-warning mb-2" style="font-size: 2rem;"></i>
+                            <h6 class="fw-bold">Conserve Energy</h6>
+                            <p class="small text-muted mb-1">Turn off unused electronics and use energy-efficient appliances.</p>
+                            <span class="badge bg-warning text-dark">Save Power</span>
+                            <div class="mt-2 small">Switch to LED bulbs, unplug chargers, and set your thermostat wisely to save both energy and money.</div>
                         </div>
                     </div>
                 </div>
@@ -172,7 +187,8 @@ function calculateTransportImpact() {
             'train': 'Train',
             'walk': 'Walking',
             'bike': 'Bicycle',
-            'motorbike': 'Motorcycle'
+            'motorbike': 'Motorcycle',
+            'airplane': 'Airplane'
         };
         
         let impactText = '';
@@ -210,47 +226,41 @@ function calculateTransportImpact() {
     }
 }
 
+carbonFactors.transport.airplane = 0.255; // Ensure airplane is included
+
 function calculateCarbonFootprint() {
     const transportMode = document.getElementById('transport_mode').value;
     const transportDistance = parseFloat(document.getElementById('transport_distance').value) || 0;
     const mealType = document.getElementById('meal_type').value;
     const energyUsage = document.getElementById('energy_usage').value;
-    
+
+    let transportEmissions = 0;
+    let mealEmissions = 0;
+    let energyEmissions = 0;
     let totalEmissions = 0;
-    let breakdown = [];
-    
-    // Calculate transport emissions
-    if (transportMode && transportDistance >= 0) {
-        const transportEmissions = carbonFactors.transport[transportMode] * transportDistance;
-        totalEmissions += transportEmissions;
-        if (transportEmissions > 0) {
-            breakdown.push(`${transportEmissions.toFixed(2)} kg from transport`);
-        }
+
+    if (transportMode && transportMode in carbonFactors.transport) {
+        transportEmissions = carbonFactors.transport[transportMode] * transportDistance;
     }
-    
-    // Calculate meal emissions
-    if (mealType) {
-        const mealEmissions = carbonFactors.diet[mealType];
-        totalEmissions += mealEmissions;
-        breakdown.push(`${mealEmissions.toFixed(2)} kg from meals`);
+    if (mealType && mealType in carbonFactors.diet) {
+        mealEmissions = carbonFactors.diet[mealType];
     }
-    
-    // Calculate energy emissions
-    if (energyUsage) {
-        const energyEmissions = carbonFactors.energy[energyUsage];
-        totalEmissions += energyEmissions;
-        breakdown.push(`${energyEmissions.toFixed(2)} kg from energy`);
+    if (energyUsage && energyUsage in carbonFactors.energy) {
+        energyEmissions = carbonFactors.energy[energyUsage];
     }
-    
-    // Update preview
-    const preview = document.getElementById('carbonPreview');
-    if (totalEmissions > 0) {
-        preview.innerHTML = `
-            <strong>Estimated Total: ${totalEmissions.toFixed(2)} kg CO₂</strong><br>
-            <small class="text-muted">${breakdown.join(', ')}</small>
-        `;
+    totalEmissions = transportEmissions + mealEmissions + energyEmissions;
+
+    document.getElementById('previewTransport').textContent = transportEmissions.toFixed(2);
+    document.getElementById('previewDiet').textContent = mealEmissions.toFixed(2);
+    document.getElementById('previewEnergy').textContent = energyEmissions.toFixed(2);
+    document.getElementById('previewTotal').textContent = totalEmissions.toFixed(2);
+
+    // Show breakdown only if at least one value is filled
+    const breakdown = document.getElementById('carbonBreakdown');
+    if (transportMode || mealType || energyUsage) {
+        breakdown.style.display = '';
     } else {
-        preview.innerHTML = '<p class="mb-0">Fill in the form above to see your estimated carbon impact.</p>';
+        breakdown.style.display = 'none';
     }
 }
 
@@ -258,13 +268,57 @@ function calculateCarbonFootprint() {
 document.getElementById('transport_mode').addEventListener('change', function() {
     calculateTransportImpact();
     calculateCarbonFootprint();
+    var airplaneNote = document.getElementById('airplaneNote');
+    if (this.value === 'airplane') {
+        airplaneNote.style.display = '';
+    } else {
+        airplaneNote.style.display = 'none';
+    }
 });
 document.getElementById('transport_distance').addEventListener('input', function() {
     calculateTransportImpact();
     calculateCarbonFootprint();
 });
-document.getElementById('meal_type').addEventListener('change', calculateCarbonFootprint);
-document.getElementById('energy_usage').addEventListener('change', calculateCarbonFootprint);
+
+const mealTypeDescriptions = {
+    'veg': '<span class="text-success"><i class="fas fa-leaf me-1"></i>Vegetarian meals have a low carbon footprint (0.5 kg CO₂ per meal). Choosing more plant-based foods helps the planet!</span>',
+    'non_veg': '<span class="text-danger"><i class="fas fa-drumstick-bite me-1"></i>Non-vegetarian meals have a high carbon footprint (2.5 kg CO₂ per meal), especially red meat and fish.</span>',
+    'mixed': '<span class="text-warning"><i class="fas fa-seedling me-1"></i>Mixed meals have a medium carbon footprint (1.5 kg CO₂ per meal). Try to include more vegetables for a lower impact.</span>'
+};
+
+document.getElementById('meal_type').addEventListener('change', function() {
+    const info = document.getElementById('mealTypeInfo');
+    if (this.value && mealTypeDescriptions[this.value]) {
+        info.innerHTML = mealTypeDescriptions[this.value];
+        info.style.display = '';
+    } else {
+        info.style.display = 'none';
+    }
+    calculateCarbonFootprint();
+});
+
+const energyUsageDescriptions = {
+    'low': '<span class="text-success"><i class="fas fa-battery-quarter me-1"></i>Low energy usage (2 kg CO₂/day, ~2-4 kWh): Minimal appliances, lights off, no AC. Great for the environment!</span>',
+    'medium': '<span class="text-warning"><i class="fas fa-lightbulb me-1"></i>Medium energy usage (5 kg CO₂/day, ~5-10 kWh): Regular appliances, some AC/fans, lights on. Try to reduce where possible.</span>',
+    'high': '<span class="text-danger"><i class="fas fa-bolt me-1"></i>High energy usage (10 kg CO₂/day, ~11+ kWh): Frequent AC, many electronics, high lighting. Consider ways to save energy!</span>'
+};
+
+document.getElementById('energy_usage').addEventListener('change', function() {
+    const info = document.getElementById('energyUsageInfo');
+    if (this.value && energyUsageDescriptions[this.value]) {
+        info.innerHTML = energyUsageDescriptions[this.value];
+        info.style.display = '';
+    } else {
+        info.style.display = 'none';
+    }
+    calculateCarbonFootprint();
+});
+
+// Attach to all relevant inputs
+['transport_mode', 'transport_distance', 'meal_type', 'energy_usage'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calculateCarbonFootprint);
+    document.getElementById(id).addEventListener('change', calculateCarbonFootprint);
+});
 
 // Form validation
 document.getElementById('logForm').addEventListener('submit', function(e) {

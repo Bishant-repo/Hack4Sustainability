@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
+from flask import flash, jsonify
 
 app = Flask(__name__)
 app.secret_key = 'greentrack_secret_key_2024'
@@ -11,7 +12,8 @@ app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'greentrack'
-app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+app.config['MYSQL_CURSORCLASS'] = \
+    'DictCursor'
 
 mysql = MySQL(app)
 
@@ -23,7 +25,8 @@ CARBON_FACTORS = {
         'train': 0.04,
         'walk': 0,
         'bike': 0,
-        'motorbike': 0.15  # kg CO2 per km (lower than car but higher than public transport)
+        'motorbike': 0.15,  # kg CO2 per km (lower than car but higher than public transport)
+        'airplane': 0.255  # kg CO2 per km (average short-haul flight)
     },
     'diet': {
         'veg': 0.5,  # kg CO2 per meal
@@ -208,12 +211,15 @@ def dashboard():
     onboarding = cur.fetchone()
     
     # Get recent logs for charts
-    cur.execute("""
+    cur.execute(
+        """
         SELECT * FROM daily_logs 
         WHERE user_id = %s 
         ORDER BY created_at DESC 
         LIMIT 30
-    """, (session['user_id'],))
+        """,
+        (session['user_id'],)
+    )
     logs = cur.fetchall()
     
     # Convert Decimal values to float for template compatibility
@@ -222,11 +228,10 @@ def dashboard():
         log['transport_distance'] = float(log['transport_distance'])
     
     # Get user's pledges
-    cur.execute("""
-        SELECT * FROM pledges 
-        WHERE user_id = %s 
-        ORDER BY created_at DESC
-    """, (session['user_id'],))
+    cur.execute(
+        "SELECT * FROM pledges WHERE user_id = %s ORDER BY created_at DESC",
+        (session['user_id'],)
+    )
     pledges = cur.fetchall()
     
     # Convert Decimal values to float for template compatibility
@@ -234,7 +239,9 @@ def dashboard():
         pledge['amount'] = float(pledge['amount'])
     
     # Get climate tips
-    cur.execute("SELECT * FROM climate_tips ORDER BY RAND() LIMIT 3")
+    cur.execute(
+        "SELECT * FROM climate_tips ORDER BY RAND() LIMIT 3"
+    )
     tips = cur.fetchall()
     
     cur.close()
@@ -266,19 +273,35 @@ def log_activity():
         energy_usage = request.form['energy_usage']
         
         # Calculate carbon footprint for this log
-        transport_emissions = CARBON_FACTORS['transport'][transport_mode] * transport_distance
+        transport_emissions = (
+            CARBON_FACTORS['transport'][transport_mode] * transport_distance
+        )
         meal_emissions = CARBON_FACTORS['diet'][meal_type]
         energy_emissions = CARBON_FACTORS['energy'][energy_usage]
         
-        total_emissions = transport_emissions + meal_emissions + energy_emissions
+        total_emissions = (
+            transport_emissions + meal_emissions + energy_emissions
+        )
         
         cur = mysql.connection.cursor()
-        cur.execute("""
-            INSERT INTO daily_logs (user_id, transport_mode, transport_distance, meal_type, 
-                                  energy_usage, total_emissions, created_at)
+        cur.execute(
+            """
+            INSERT INTO daily_logs (
+                user_id, transport_mode, transport_distance, meal_type, 
+                energy_usage, total_emissions, created_at
+            )
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (session['user_id'], transport_mode, transport_distance, meal_type, 
-              energy_usage, total_emissions, datetime.now()))
+            """,
+            (
+                session['user_id'],
+                transport_mode,
+                transport_distance,
+                meal_type,
+                energy_usage,
+                total_emissions,
+                datetime.now()
+            )
+        )
         mysql.connection.commit()
         cur.close()
         
@@ -335,12 +358,15 @@ def get_score():
     cur.execute("SELECT * FROM onboarding WHERE user_id = %s", (session['user_id'],))
     onboarding = cur.fetchone()
     
-    cur.execute("""
+    cur.execute(
+        """
         SELECT * FROM daily_logs 
         WHERE user_id = %s 
         ORDER BY created_at DESC 
         LIMIT 30
-    """, (session['user_id'],))
+        """,
+        (session['user_id'],)
+    )
     logs = cur.fetchall()
     cur.close()
     
@@ -401,6 +427,20 @@ def profile():
         preferences=preferences,
         message=message
     )
+
+
+@app.route('/admin/update_pledge_status', methods=['POST'])
+def admin_update_pledge_status():
+    # Simple admin endpoint for demonstration (no authentication)
+    pledge_id = request.form.get('pledge_id')
+    new_status = request.form.get('new_status')
+    if not pledge_id or not new_status:
+        return jsonify({'success': False, 'error': 'Missing pledge_id or new_status'}), 400
+    cur = mysql.connection.cursor()
+    cur.execute("UPDATE pledges SET status = %s WHERE id = %s", (new_status, pledge_id))
+    mysql.connection.commit()
+    cur.close()
+    return jsonify({'success': True, 'pledge_id': pledge_id, 'new_status': new_status})
 
 
 def calculate_base_score(travel_habits, diet, energy_usage):
