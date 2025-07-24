@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from flask_mysqldb import MySQL
+import pymysql
+from flask_pymysql import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 
@@ -12,6 +13,9 @@ app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'greentrack'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
+
+# Ensure PyMySQL is used as MySQLdb
+pymysql.install_as_MySQLdb()
 
 mysql = MySQL(app)
 
