@@ -183,7 +183,7 @@ The application uses industry-standard carbon factors based on verified environm
 ## 📞 Support & Contact
 
 - **Contact Email**: bidaribishant07@gmail.com
--                     unesh.khadka22@gmail.com
+- **Contact Email**: unesh.khadka22@gmail.com
 
 ## 🌍 Impact & Mission
 
