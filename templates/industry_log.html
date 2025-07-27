@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Industry Log - GreenTrack{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Industry Activity Log</h2>
+    <p>Industry ID: {{ industry_id }}</p>
+    <form method="POST">
+        <!-- Add fields for industry activity logging here -->
+        <div class="mb-3">
+            <label for="activity_type" class="form-label">Activity Type</label>
+            <select class="form-select" id="activity_type" name="activity_type" required>
+                <option value="">Select activity</option>
+                <option value="energy">Energy Usage</option>
+                <option value="transport">Transport</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="amount" class="form-label">Amount (e.g., kWh, km, etc.)</label>
+            <input type="number" class="form-control" id="amount" name="amount" min="0" step="0.01" required>
+        </div>
+        <button type="submit" class="btn btn-success">Log Activity</button>
+    </form>
+    <div class="mt-3">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">Back to Dashboard</a>
+    </div>
+</div>
+{% endblock %} 

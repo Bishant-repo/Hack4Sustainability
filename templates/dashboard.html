@@ -125,6 +125,241 @@
     </div>
 </div>
 
+<!-- Carbon Credits Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="glass-card text-center">
+            <h4><i class="fas fa-certificate me-2"></i>Carbon Credits Needed</h4>
+            {% set annual_emissions = (current_score * 365) %}
+            {% set credits_needed = (annual_emissions / 1000) %}
+            {% set credits_needed_rounded = credits_needed|round(0, 'ceil') %}
+            <div class="display-6 fw-bold mb-2" style="color: var(--primary);">
+                {{ credits_needed_rounded }} credits
+            </div>
+            <p class="mb-0">To offset your estimated annual footprint ({{ annual_emissions | round(0) }} kg CO₂), you need <b>{{ credits_needed_rounded }}</b> carbon credits (actual: {{ credits_needed | round(2) }})</p>
+            <button class="btn btn-outline-success mt-2" data-bs-toggle="modal" data-bs-target="#carbonCreditModal" onclick="openOffsetModal()">Offset with Credits</button>
+        </div>
+    </div>
+</div>
+
+<!-- Carbon Credit Modal -->
+<div class="modal fade" id="carbonCreditModal" tabindex="-1" aria-labelledby="carbonCreditModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="carbonCreditModalLabel">
+          <i class="fas fa-leaf me-2"></i>Carbon Offset with Credits
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Carbon Footprint Summary -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card border-success">
+              <div class="card-body text-center">
+                <h6 class="card-title text-success">Your Annual Footprint</h6>
+                <h3 class="text-danger">{{ (current_score * 365) | round(0) }} kg CO₂</h3>
+                <small class="text-muted">Based on your daily average</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card border-primary">
+              <div class="card-body text-center">
+                <h6 class="card-title text-primary">Credits Needed</h6>
+                <h3 class="text-primary">{{ credits_needed_rounded }} credits</h3>
+                <small class="text-muted">1 credit = 1,000 kg CO₂</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Offset Options -->
+        <div class="mb-4">
+          <h6 class="fw-bold mb-3">Choose Your Offset Amount:</h6>
+          <div class="row">
+            <div class="col-md-4 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="offsetOption" id="option1" value="1" checked>
+                <label class="form-check-label" for="option1">
+                  <strong>1 Credit</strong><br>
+                  <small class="text-muted">1,000 kg CO₂ • $10</small>
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="offsetOption" id="option5" value="5">
+                <label class="form-check-label" for="option5">
+                  <strong>5 Credits</strong><br>
+                  <small class="text-muted">5,000 kg CO₂ • $50</small>
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="offsetOption" id="optionFull" value="full">
+                <label class="form-check-label" for="optionFull">
+                  <strong>Full Annual</strong><br>
+                  <small class="text-muted">{{ credits_needed_rounded }} credits • ${{ credits_needed_rounded * 10 }}</small>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Amount -->
+        <div class="mb-4">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="offsetOption" id="optionCustom" value="custom">
+            <label class="form-check-label" for="optionCustom">
+              <strong>Custom Amount</strong>
+            </label>
+          </div>
+          <div class="mt-2" id="customAmountDiv" style="display: none;">
+            <div class="row">
+              <div class="col-md-6">
+                <label for="credit_amount" class="form-label">Number of Credits</label>
+                <input type="number" class="form-control" id="credit_amount" name="credits" min="1" step="1" value="1">
+                <div class="form-text">Each credit = 1,000 kg CO₂ offset</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Total Cost</label>
+                <div class="form-control-plaintext" id="totalCostText">$10</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment Methods -->
+        <div class="mb-4">
+          <h6 class="fw-bold mb-3">Payment Method:</h6>
+          <div class="row">
+            <div class="col-md-4 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="paymentMethod" id="card" value="card" checked>
+                <label class="form-check-label" for="card">
+                  <i class="fas fa-credit-card me-2"></i>Credit Card
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="paymentMethod" id="paypal" value="paypal">
+                <label class="form-check-label" for="paypal">
+                  <i class="fab fa-paypal me-2"></i>PayPal
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="paymentMethod" id="crypto" value="crypto">
+                <label class="form-check-label" for="crypto">
+                  <i class="fas fa-bitcoin me-2"></i>Cryptocurrency
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Information -->
+        <div class="alert alert-info">
+          <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Where Your Money Goes</h6>
+          <p class="mb-2">Your carbon credits support verified environmental projects including:</p>
+          <ul class="mb-0 small">
+            <li>🌳 Tree planting and reforestation projects</li>
+            <li>☀️ Renewable energy development</li>
+            <li>💧 Clean water and sanitation projects</li>
+            <li>🏭 Industrial efficiency improvements</li>
+          </ul>
+        </div>
+
+        <form method="POST" action="{{ url_for('offset_payment') }}" id="creditPledgeForm">
+          <input type="hidden" id="finalCredits" name="credits" value="1">
+          <input type="hidden" id="paymentMethod" name="payment_method" value="card">
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="fas fa-lock me-2"></i>Proceed to Secure Payment
+            </button>
+            <small class="text-muted text-center">Your payment is secure and encrypted</small>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Handle offset option changes
+document.querySelectorAll('input[name="offsetOption"]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    const customDiv = document.getElementById('customAmountDiv');
+    const creditInput = document.getElementById('credit_amount');
+    const totalCostText = document.getElementById('totalCostText');
+    const finalCredits = document.getElementById('finalCredits');
+    
+    if (this.value === 'custom') {
+      customDiv.style.display = 'block';
+      creditInput.focus();
+    } else {
+      customDiv.style.display = 'none';
+      
+      let credits = 1;
+      if (this.value === '5') {
+        credits = 5;
+      } else if (this.value === 'full') {
+        credits = {{ credits_needed_rounded }};
+      }
+      
+      finalCredits.value = credits;
+      totalCostText.textContent = '$' + (credits * 10);
+    }
+  });
+});
+
+// Handle custom amount input
+document.getElementById('credit_amount').addEventListener('input', function() {
+  const credits = parseInt(this.value) || 1;
+  const totalCost = credits * 10;
+  document.getElementById('totalCostText').textContent = '$' + totalCost;
+  document.getElementById('finalCredits').value = credits;
+});
+
+// Handle payment method changes
+document.querySelectorAll('input[name="paymentMethod"]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    document.getElementById('paymentMethod').value = this.value;
+  });
+});
+
+// Initialize with default values
+document.getElementById('finalCredits').value = 1;
+document.getElementById('paymentMethod').value = 'card';
+
+// Fallback function to open modal
+function openOffsetModal() {
+    console.log('Opening offset modal...');
+    const modal = new bootstrap.Modal(document.getElementById('carbonCreditModal'));
+    modal.show();
+}
+
+// Test modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('carbonCreditModal');
+    const button = document.querySelector('[data-bs-target="#carbonCreditModal"]');
+    
+    if (modal && button) {
+        console.log('Modal and button found - Bootstrap should work');
+        button.addEventListener('click', function() {
+            console.log('Offset button clicked');
+        });
+    } else {
+        console.log('Modal or button not found');
+    }
+});
+</script>
+
 <!-- Recent Activity and Pledges -->
 <div class="row">
     <div class="col-lg-6 mb-4">
@@ -169,6 +404,16 @@
                                 <strong>{{ pledge.pledge_type|replace('_', ' ')|title }}</strong>
                                 <br>
                                 <small>{{ pledge.created_at.strftime('%b %d, %Y') }}</small>
+                                {% if pledge.pledge_type == 'carbon_offset' and pledge.payment_method %}
+                                    <br>
+                                    <small class="text-primary">
+                                        <i class="fas fa-credit-card me-1"></i>
+                                        {{ pledge.payment_method|title }}
+                                        {% if pledge.total_cost %}
+                                            • ${{ pledge.total_cost }}
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
                             </div>
                             <div class="text-end">
                                 <span class="badge bg-light text-dark">{{ pledge.amount }} kg CO₂</span>

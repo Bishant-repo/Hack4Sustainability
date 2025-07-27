@@ -18,10 +18,12 @@ GreenTrack is a modern, gamified web application designed to help users track, r
 - Receive actionable advice to help reduce your environmental impact
 - Learn about sustainable practices through interactive tips
 
-### 🌳 Offset Options
-- Pledge to offset your emissions via tree-planting
-- Support verified climate projects and renewable energy initiatives
-- Make donations to environmental organizations
+### 🌳 Carbon Offset with Credits
+- Purchase carbon credits to offset your emissions ($10 per 1,000 kg CO₂)
+- Choose from multiple payment methods (Credit Card, PayPal, Cryptocurrency)
+- Support verified environmental projects worldwide
+- Track your offset pledges and payment status
+- Visualize your impact with detailed offset analytics
 
 ### 🧠 Educational Content
 - "Did You Know?" facts section with climate trivia
@@ -78,6 +80,17 @@ greentrack/
 ```
 
 ## 🔧 Configuration
+
+### Database Setup
+1. **Initial Setup**: Run the database setup script:
+   ```sql
+   mysql -u your_username -p < database_setup.sql
+   ```
+
+2. **Migration (if updating existing database)**: Run the migration script to add payment columns:
+   ```sql
+   mysql -u your_username -p < migrate_pledges.sql
+   ```
 
 ### Database Configuration
 Update the MySQL configuration in `app.py`:

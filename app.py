@@ -1,14 +1,7 @@
-<<<<<<< HEAD
-from flask import Flask, render_template, request, redirect, url_for, session
-from flask_mysqldb import MySQL
-=======
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-import pymysql
-from flask_pymysql import MySQL
->>>>>>> 234ea3200b00da2e46d797f001e56d9a87ec72dd
+from flask_mysqldb import MySQL
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
-from flask import flash, jsonify
 
 app = Flask(__name__)
 app.secret_key = 'greentrack_secret_key_2024'
@@ -18,11 +11,7 @@ app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = ''
 app.config['MYSQL_DB'] = 'greentrack'
-app.config['MYSQL_CURSORCLASS'] = \
-    'DictCursor'
-
-# Ensure PyMySQL is used as MySQLdb
-pymysql.install_as_MySQLdb()
+app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 mysql = MySQL(app)
 
@@ -55,6 +44,10 @@ def index():
     if 'user_id' in session:
         return redirect(url_for('dashboard'))
     return render_template('index.html')
+
+@app.route('/test-modal')
+def test_modal():
+    return render_template('test_modal.html')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -92,6 +85,7 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
+        login_type = request.form.get('login_type', 'individual')
 
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM users WHERE email = %s", (email,))
@@ -101,6 +95,7 @@ def login():
         if user and check_password_hash(user['password'], password):
             session['user_id'] = user['id']
             session['user_name'] = user['name']
+            session['login_type'] = login_type
 
             # Check if user has completed onboarding
             cur = mysql.connection.cursor()
@@ -114,6 +109,8 @@ def login():
             if not onboarding:
                 return redirect(url_for('onboarding'))
             else:
+                if login_type == 'industry':
+                    return redirect(url_for('industry_landing'))
                 return redirect(url_for('dashboard'))
         else:
             flash('Invalid email or password!', 'error')
@@ -261,13 +258,21 @@ def dashboard():
     # Calculate weekly trend
     weekly_data = calculate_weekly_trend(logs)
     
+    # Calculate carbon credits needed
+    annual_emissions = current_score * 365
+    credits_needed = annual_emissions / 1000  # 1 credit = 1000 kg CO2
+    credits_needed_rounded = int(credits_needed + 0.99)  # Round up
+    
     return render_template('dashboard.html', 
                          user_name=session['user_name'],
                          current_score=current_score,
                          logs=logs,
                          pledges=pledges,
                          tips=tips,
-                         weekly_data=weekly_data)
+                         weekly_data=weekly_data,
+                         annual_emissions=annual_emissions,
+                         credits_needed=credits_needed,
+                         credits_needed_rounded=credits_needed_rounded)
 
 
 @app.route('/log', methods=['GET', 'POST'])
@@ -438,6 +443,73 @@ def profile():
     )
 
 
+@app.route('/offset_payment', methods=['POST'])
+def offset_payment():
+    if 'user_id' not in session:
+        flash('Please login to offset your carbon footprint.', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        credits = int(request.form.get('credits', 1))
+        payment_method = request.form.get('payment_method', 'card')
+        
+        if credits < 1:
+            flash('Please select at least 1 credit.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Calculate offset amount (1 credit = 1000 kg CO2)
+        offset_amount = credits * 1000
+        total_cost = credits * 10  # $10 per credit
+        
+        # Create a pledge record for the carbon offset
+        cur = mysql.connection.cursor()
+        try:
+            # Try to insert with payment_method and total_cost columns
+            cur.execute(
+                """
+                INSERT INTO pledges (user_id, pledge_type, amount, status, created_at, payment_method, total_cost) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """,
+                (session['user_id'], 'carbon_offset', offset_amount, 'pending', datetime.now(), payment_method, total_cost)
+            )
+        except Exception:
+            # Fallback if columns don't exist yet
+            cur.execute(
+                """
+                INSERT INTO pledges (user_id, pledge_type, amount, status, created_at) 
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (session['user_id'], 'carbon_offset', offset_amount, 'pending', datetime.now())
+            )
+        mysql.connection.commit()
+        cur.close()
+        
+        # Create success message with payment details
+        payment_methods = {
+            'card': 'Credit Card',
+            'paypal': 'PayPal',
+            'crypto': 'Cryptocurrency'
+        }
+        
+        flash(
+            f'✅ Carbon offset pledge created successfully!\n'
+            f'📊 {offset_amount:,} kg CO₂ offset ({credits} credit(s))\n'
+            f'💳 Payment Method: {payment_methods.get(payment_method, payment_method)}\n'
+            f'💰 Total Cost: ${total_cost}\n'
+            f'⏳ Status: Pending payment confirmation',
+            'success'
+        )
+        
+        return redirect(url_for('dashboard'))
+        
+    except ValueError:
+        flash('Invalid credit amount. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
+    except Exception as e:
+        flash('An error occurred while processing your offset request. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
+
+
 @app.route('/admin/update_pledge_status', methods=['POST'])
 def admin_update_pledge_status():
     # Simple admin endpoint for demonstration (no authentication)
@@ -492,11 +564,12 @@ def calculate_current_score(logs, base_score):
     if not logs:
         return float(base_score) if base_score else 0.0
     
-    # Calculate average daily emissions from recent logs
-    total_emissions = sum(float(log['total_emissions']) for log in logs)
-    avg_daily_emissions = total_emissions / len(logs)
-    
-    # Combine with base score
+    # Calculate average daily emissions from recent logs (last 7 days)
+    recent_logs = logs[:7]  # Get last 7 logs
+    total_emissions = sum(float(log['total_emissions']) for log in recent_logs)
+    avg_daily_emissions = total_emissions / len(recent_logs)
+
+    # Use the average daily emissions as the current score
     current_score = (float(base_score) + avg_daily_emissions) / 2
     
     return round(current_score, 2)

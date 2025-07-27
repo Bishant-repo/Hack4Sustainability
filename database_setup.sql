@@ -45,6 +45,8 @@ CREATE TABLE pledges (
     amount DECIMAL(10,2) NOT NULL,
     pledge_type ENUM('tree_planting', 'renewable_energy', 'carbon_offset') NOT NULL,
     status ENUM('pending', 'completed', 'cancelled') DEFAULT 'pending',
+    payment_method VARCHAR(50) DEFAULT NULL,
+    total_cost DECIMAL(10,2) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -71,3 +73,8 @@ INSERT INTO climate_tips (title, content, category, impact_score) VALUES
 ('Carpool When Possible', 'Sharing rides can reduce your transport emissions by up to 50% per trip.', 'transport', 3),
 ('Use Cold Water for Laundry', 'Washing clothes in cold water can save up to 90% of the energy used by your washing machine.', 'energy', 2),
 ('Reduce Single-Use Plastics', 'Bring your own water bottle and shopping bags to reduce plastic waste and emissions.', 'general', 2); 
+
+-- Remove industry_id from users and drop industries table if exists
+ALTER TABLE users DROP FOREIGN KEY IF EXISTS users_ibfk_industry_id;
+ALTER TABLE users DROP COLUMN IF EXISTS industry_id;
+DROP TABLE IF EXISTS industries; 
